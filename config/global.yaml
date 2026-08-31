@@ -1,0 +1,15 @@
+# 全局配置
+# 所有知识库共享的默认设置，可被各库 kb.config.yaml 覆盖。
+
+defaults:
+  entry_template: shared/templates/entry.md
+  index:
+    build_search_index: true
+
+# 抓取相关的全局默认（含安全约束）
+fetch:
+  timeout_seconds: 20
+  user_agent: "knowledge-base-bot/1.0"
+  # SSRF 防护：默认拒绝内网地址访问；如需访问内部域名，加入 allow_internal_hosts。
+  block_internal_networks: true
+  allow_internal_hosts: []
