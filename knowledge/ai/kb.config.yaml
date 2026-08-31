@@ -1,0 +1,30 @@
+# AI 知识库配置
+# 该文件描述本知识库的元信息与更新行为，由 shared/ 中的通用工具读取。
+
+name: ai
+title: AI 知识库
+description: 人工智能相关知识，含大模型、机器学习、工程实践等。
+
+# 内容分类（用于组织 entries/ 下的子目录与索引）
+categories:
+  - llm            # 大语言模型
+  - ml             # 机器学习基础
+  - engineering    # AI 工程与部署
+  - papers         # 论文笔记
+  - tools          # 工具与框架
+
+# 更新源（由 shared/core/fetcher 消费；type 决定使用哪个抓取器）
+sources:
+  - name: example-rss
+    type: rss
+    url: "https://example.com/ai/feed.xml"
+    enabled: false
+
+# 更新调度（供自动化/automation 参考，cron 表达式）
+schedule:
+  cron: "0 8 * * 1"   # 每周一 08:00
+
+# 索引配置
+index:
+  output: index/
+  build_search_index: true

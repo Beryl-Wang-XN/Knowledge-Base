@@ -1,0 +1,4 @@
+# 核心依赖
+PyYAML>=6.0
+# 站点构建（scripts/build_site.py）
+markdown>=3.0

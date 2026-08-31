@@ -1,0 +1,30 @@
+# Finance 知识库配置
+# 该文件描述本知识库的元信息与更新行为，由 shared/ 中的通用工具读取。
+
+name: finance
+title: 金融知识库
+description: 金融相关知识，含宏观、市场、量化、金融工程等。
+
+# 内容分类（用于组织 entries/ 下的子目录与索引）
+categories:
+  - macro          # 宏观经济
+  - markets        # 市场与资产
+  - quant          # 量化与策略
+  - instruments    # 金融工具与产品
+  - regulation     # 政策与监管
+
+# 更新源（由 shared/core/fetcher 消费；type 决定使用哪个抓取器）
+sources:
+  - name: example-rss
+    type: rss
+    url: "https://example.com/finance/feed.xml"
+    enabled: false
+
+# 更新调度（供自动化/automation 参考，cron 表达式）
+schedule:
+  cron: "0 8 * * 1"   # 每周一 08:00
+
+# 索引配置
+index:
+  output: index/
+  build_search_index: true

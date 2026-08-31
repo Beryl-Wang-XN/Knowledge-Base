@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+
+# 站点构建产物（由 Markdown 数据源重建，不纳入版本管理）
+knowledge/*/site/
+
+# skill 打包临时产物
+dist/
+
+# 系统与编辑器
+.DS_Store
+.idea/
+.vscode/
