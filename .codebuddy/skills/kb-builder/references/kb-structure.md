@@ -19,12 +19,13 @@ knowledge/<domain>/
 │   ├── _schema.md      #   实体字段规范（分维度组，null=待核实）
 │   ├── <实体>/          #   一实体一文件
 │   └── index.md        #   横向对比总表
+├── daily/              # 每日学习页（YYYY-MM-DD.md；样例不记打卡）
 ├── inbox/              # 情报暂存区（未归类的每日更新）
 ├── _templates/         # 本库模板（entry.md 等）
 ├── site/               # 静态站点构建产物（HTML，gitignore，勿手改）
 └── publish/            # 呈现物产出
-    ├── xhs/            #   小红书文案 + AI 配图
-    └── podcast/        #   播客口播稿
+    ├── xhs/            #   小红书文案；预填为浏览器本地草稿，仅自己可见
+    └── podcast/        #   播客口播稿 + 同名音频（scripts/synthesize_podcast.py）
 ```
 
 ## 命名约定

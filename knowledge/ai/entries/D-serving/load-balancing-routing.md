@@ -16,8 +16,12 @@ sources:
     url: https://openrouter.ai/docs/features/provider-routing
     tier: 一手
     verified: 2026-08-31
+  - name: "RouteLLM: Learning to Route LLMs with Preference Data（arXiv:2406.18665）"
+    url: https://arxiv.org/abs/2406.18665
+    tier: 一手
+    verified: 2026-10-21
 created: 2026-08-31
-updated: 2026-08-31
+updated: 2026-10-21
 status: 已消化
 ---
 
@@ -61,7 +65,7 @@ flowchart TB
 
 ### 3. 推理感知的负载均衡（Inference-aware / Smart Load Balancing）
 
-文档把它称为"**智能负载均衡（smart load balancing）**"：定义了针对推理优化的**可定制负载均衡与请求路由模式**，并提供基于"**模型服务器发出的指标**"来选端点的参考实现，可**替代传统负载均衡机制**。官方明确表述：这已被证明能**降低服务延迟、提升集群中加速器（GPU）的利用率**（具体量化数字本页未给出，**待核实**）。
+文档把它称为"**智能负载均衡（smart load balancing）**"：定义了针对推理优化的**可定制负载均衡与请求路由模式**，并提供基于"**模型服务器发出的指标**"来选端点的参考实现，可**替代传统负载均衡机制**。官方明确表述：这已被证明能**降低服务延迟、提升集群中加速器（GPU）的利用率**。具体百分比没有准确数据。
 
 ### 4. Endpoint Picker（EPP，端点选择器）
 
@@ -106,11 +110,11 @@ EPP 做决策依赖模型服务平台上报的**性能、可用性与能力**指
 - 它明确指出**传统基于请求路径的负载均衡无法理解推理负载特性**，主张**推理感知路由**；实现方式为 **Envoy ext-proc** 扩展任意兼容网关为"Inference Gateway"。
 - **EPP（Endpoint Picker）** 是推理路由器实现；官方只提供**参考实现（用于一致性测试）**，**生产建议自研或用 llm-d-router**。
 - 路由决策的关键信号包含 **Prefix Cache 状态（KV-Cache 感知）** 与 **LoRA 适配器可用性**。
-- 官方称推理感知 LB 已被证明能**降低延迟、提升加速器利用率**（**未给出具体百分比，待核实**）。
+- 官方称推理感知 LB 已被证明能**降低延迟、提升加速器利用率**。具体百分比没有准确数据。
 - **vLLM**：`--data-parallel-size > 1` 时启动 **DP Coordinator** 做**跨 DP rank 的负载均衡**。
 - **OpenRouter Provider Routing（官方文档已核实）**：默认负载均衡**先排除近 30 秒内故障的供应商**、再**按价格倒数平方加权**选择；`sort` 可按 price/throughput/latency 确定性排序（关闭 LB）；`allow_fallbacks`（默认 true）做故障转移；性能阈值基于**滚动 5 分钟 p50/p75/p90/p99**，不达标端点**降权而非排除**。
 
-> ⚠️ 待深入：**语义路由（按请求难度自动选大/小模型降本）** 是业界常见的降本产品思路，但本次核实的两个官方源**未直接定义该机制**，其权威定义与效果数据**待核实**（避免与"模型感知路由"混淆——后者按 `model` 字段路由，前者按内容难度自动改选模型）。
+> **按难度改选模型**有一篇可引用的论文定义，但不是网关标准。[RouteLLM](https://arxiv.org/abs/2406.18665)（arXiv:2406.18665，ICLR 2025）把路由定义成：在一个更强模型和一个更弱模型之间，把简单请求交给弱模型、复杂请求留给强模型，用偏好数据训练路由器。论文摘要写成本可降到 **2 倍以上**。表 6 的具体倍数有条件：相对随机基线少调用 GPT-4，对照模型是 Mixtral 8x7B；MT Bench 上最好约 **3.66×**（保持约 95% 的 GPT-4 质量），MMLU 约 **1.41×**（约 92% 质量），GSM8K 约 **1.49×**（约 87% 质量）。这组数字不能外推成「我方语义路由一定省这么多」。它和上面的模型感知路由不是一回事：后者按请求里的 `model` 字段选池，前者会改选模型。
 
 ## 分类 / 对比（如适用）
 
@@ -125,7 +129,7 @@ EPP 做决策依赖模型服务平台上报的**性能、可用性与能力**指
 ## 常见误区 / 注意点
 
 - **误区一**：用轮询/最少连接给 LLM 做负载均衡。LLM 请求耗时高度不均，轮询会把请求砸到已过载实例、制造长尾延迟。
-- **误区二**：把"模型感知路由"当"语义路由"。前者按 `model` 字段选池（已核实机制），后者按请求难度自动改选大/小模型（本次未从官方源核实，勿混用）。
+- **误区二**：把「模型感知路由」当成「按难度改选模型」。前者按 `model` 字段选池。后者会换成另一个模型，RouteLLM 是这种做法的一篇论文，不是已核实的网关默认行为。
 - **误区三**：以为官方给了开箱即用的生产路由器。官方 EPP 只是**参考实现**，生产要自研或用 llm-d-router 等。
 - **注意**：前缀缓存感知路由的收益，取决于业务是否有"固定 system prompt + 大量相似请求"的局部性；无局部性时收益有限。
 
@@ -134,11 +138,11 @@ EPP 做决策依赖模型服务平台上报的**性能、可用性与能力**指
 - **这是平台"多模型商品货架"的技术底座。** 我们卖几十个模型的 token，背后就是这套"按 `model` 路由 + 推理感知负载均衡"在支撑；它的效率直接决定成本与体验。官方结论"推理感知 LB 能降延迟、提利用率"意味着**同样的 GPU 采购能承接更多付费流量**——这是降本的杠杆，值得推动落地。
 - **KV-Cache / 前缀缓存感知路由是可量化的降本点。** 对"固定 system prompt + 高相似度"的 B 端场景，把请求粘到已缓存前缀的实例可省掉重复 prefill，可据此设计**缓存命中折扣**或引导客户复用 system prompt。
 - **故障转移 = 采购多供应商的商业理由。** to B 客户很看重可用性 SLA，多供应商备份既是技术容灾，也是采购谈判和 SLA 承诺的底气。[OpenRouter](https://openrouter.ai/docs/features/provider-routing) 的"先排除故障供应商、再按价格加权、支持 fallback + 性能百分位阈值"是可直接借鉴的路由策略蓝本——尤其"**价格倒数平方加权 + 30 秒故障剔除**"给了我们一个"**在成本与可用性间自动权衡**"的成熟实现参考，可用于设计自家多供应商调度与"经济/极速"路由档位。
-- **语义路由是潜在的高毛利产品机会**（对用户透明地"简单请求用小模型"），但需先核实权威实现与真实降本数据，再纳入路线图，避免拿未证实的收益承诺客户。
+- **按难度改选模型可以做成产品，收益要用自己的流量重测。** RouteLLM 在它的评测集上给出了条件化的成本倍数，不能直接写成对客户的降本承诺。
 
 ## 原文与参考
 
 - [Kubernetes Gateway API Inference Extension（官方文档 · Introduction）](https://gateway-api-inference-extension.sigs.k8s.io/)（WG-Serving / SIG-Network）。
 - [vLLM 官方文档 · Architecture Overview](https://docs.vllm.ai/en/latest/design/arch_overview.html)（DP Coordinator 负载均衡）。
 - [OpenRouter 官方文档 · Provider Routing](https://openrouter.ai/docs/features/provider-routing)（多供应商负载均衡、故障转移、性能百分位阈值）。
-- 关键术语对照：Load Balancing（负载均衡）、Routing（路由）、Inference Gateway（推理网关）、Endpoint Picker / EPP（端点选择器）、InferencePool（推理池）、Model-aware Routing（模型感知路由）、KV-Cache-aware / Prefix-Cache-aware Routing（缓存感知路由）、LoRA（低秩适配）、Failover（故障转移）、Semantic Routing（语义路由，待核实）、DP Coordinator（数据并行协调器）。
+- 关键术语对照：Load Balancing（负载均衡）、Routing（路由）、Inference Gateway（推理网关）、Endpoint Picker / EPP（端点选择器）、InferencePool（推理池）、Model-aware Routing（模型感知路由）、KV-Cache-aware / Prefix-Cache-aware Routing（缓存感知路由）、LoRA（低秩适配）、Failover（故障转移）、Semantic Routing（按难度改选模型；本条引用 RouteLLM）、DP Coordinator（数据并行协调器）。

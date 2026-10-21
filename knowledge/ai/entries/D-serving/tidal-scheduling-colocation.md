@@ -8,16 +8,16 @@ sources:
     url: https://www.usenix.org/conference/osdi20/presentation/xiao
     tier: 一手
     verified: 2026-08-31
-  - name: "NVIDIA Multi-Instance GPU (MIG) User Guide"
-    url: https://docs.nvidia.com/datacenter/tesla/mig-user-guide/index.html
+  - name: "NVIDIA MIG User Guide · Supported GPUs"
+    url: https://docs.nvidia.com/datacenter/tesla/mig-user-guide/latest/supported-gpus.html
     tier: 一手
-    verified: 2026-08-31
+    verified: 2026-10-21
   - name: "Getting the Most Out of the NVIDIA A100 GPU with Multi-Instance GPU（NVIDIA 官方技术博客，2020-11-30）"
     url: https://developer.nvidia.com/blog/getting-the-most-out-of-the-a100-gpu-with-multi-instance-gpu/
     tier: 一手
     verified: 2026-08-31
 created: 2026-08-31
-updated: 2026-08-31
+updated: 2026-10-21
 status: 已消化
 ---
 
@@ -94,7 +94,7 @@ MIG 从硬件层把一张物理 GPU 切成若干独立实例，每个实例有�
 
 ### 潮汐调度与抢占的关系
 
-潮汐调度按时间/负载在"在线↔离线"间划拨 GPU：高峰全给在线，低谷释放给离线。其正确性依赖**优先级抢占**——在线请求回升时能抢回资源。抢占本身在推理层的实现（如 vLLM 的 `RECOMPUTE`）见《[请求调度与 SLA](scheduling-and-sla.html)》；而**集群级潮汐调度的具体策略/阈值**多属各家工程实践，**待深入**（本次未找到统一的权威一手定义）。
+潮汐调度按时间/负载在"在线↔离线"间划拨 GPU：高峰全给在线，低谷释放给离线。其正确性依赖**优先级抢占**——在线请求回升时能抢回资源。抢占本身在推理层的实现（如 vLLM 的 `RECOMPUTE`）见《[请求调度与 SLA](scheduling-and-sla.html)》。集群级抢占阈值和 SLA 参数没有准确数据。
 
 ## 关键数据与事实（已核实）
 
@@ -105,10 +105,10 @@ MIG 从硬件层把一张物理 GPU 切成若干独立实例，每个实例有�
 - **NVIDIA MIG**：可将受支持 GPU **划分为多个相互隔离的实例**，每实例有**专用计算+内存资源**，提供**有保障的性能**；官方指南涵盖与 **Docker/Kubernetes** 的集成。
 - **NVIDIA A100 MIG（官方技术博客，2020-11-30 已核实）**：A100 **最多切 7 个 GPU 实例**（最小单元 GPU slice，只能选预设 profile）；每实例独占 **SM / 显存 / L2 缓存组 / 内存带宽 / DRAM 地址总线**等全路径资源；**故障隔离**；BERT-Large 推理实测 1 实例单跑与 7 实例并行跑**吞吐/延迟基本相同**（约 149 句/秒、6.4 ms）。**限制**：不支持 GPU-to-GPU P2P、不支持多 GPU/多节点训练。
 
-> ⚠️ 待核实/待深入：
-> - MIG 的**跨型号支持**（A100 已核实；H100/A30/B 系列的实例数与 profile 差异需查各自 datasheet，本条仅核实 A100）；
-> - **潮汐调度的集群级具体策略、在离线混部的抢占阈值/SLA 保障参数**（多为各厂工程实践，缺统一一手源）；
-> - "**Batch API 折扣**"等填谷产品的**具体折扣幅度**（属各厂定价策略，需回厂商官方定价页核实，见 E 模块）。
+> 集群级抢占阈值和 SLA 参数没有准确数据。AntMan 的利用率提升不能当成可直接套用的策略参数。
+>
+> MIG 最大实例数已按 [Supported GPUs](https://docs.nvidia.com/datacenter/tesla/mig-user-guide/latest/supported-gpus.html)（2026-10-21）核对：H100（SXM5 80GB/94GB、PCIe 80GB/94GB、GH200 上的 H100）和 H200（SXM5、NVL）都是 **7**；B200、GB200 也是 **7**；A30 24GB 是 **4**。profile 的显存切分仍以该指南的 Supported MIG Profiles 为准，A100 的 7 实例机制见上方博客。
+> - 「Batch API 折扣」的具体幅度属各厂定价，见 E 模块，不在这里写成统一数字。
 
 ## 分类 / 对比（如适用）
 

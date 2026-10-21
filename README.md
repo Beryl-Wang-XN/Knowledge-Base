@@ -14,15 +14,19 @@ Knowledge-Base/
 │   │   ├── progress.md         #   学习打卡表
 │   │   ├── entries/<模块>/     #   知识条目（按框架模块分目录）
 │   │   ├── registry/           #   模型档案库（核心结构化实体）
+│   │   ├── daily/              #   每日学习页（样例不记打卡）
 │   │   ├── inbox/              #   情报暂存区
+│   │   ├── publish/            #   小红书文案、播客口播稿与音频
 │   │   ├── _templates/         #   本库模板
-│   │   └── kb.config.yaml      #   本库配置
+│   │   └── kb.config.yaml      #   本库配置（分类、播客音色、08:00 说明）
 │   └── finance/                # 金融知识库（待构建，用 kb-builder 开始）
 ├── shared/                     # 复用层：核心工具 + 更新机制 + 模板
 │   ├── core/                   #   models / config / fetcher / parser / indexer
 │   ├── pipelines/              #   update：标准更新流程
 │   └── templates/              #   默认条目模板
-├── scripts/                    # 命令行入口（update_kb.py / validate.py）
+├── scripts/                    # 命令行入口
+│                               #   build_site.py / synthesize_podcast.py
+│                               #   update_kb.py / validate.py
 ├── config/                     # 全局配置（global.yaml）
 ├── .codebuddy/skills/          # 项目级 skills
 │   ├── kb-builder/             #   知识库构建方法论（复用于任意新领域）
@@ -47,8 +51,9 @@ Knowledge-Base/
 ```bash
 pip install -r requirements.txt
 
-python scripts/update_kb.py --all       # 更新全部库
-python scripts/validate.py --all        # 校验全部库
+python3 scripts/build_site.py ai        # 生成 AI 静态站
+python3 scripts/validate.py ai          # 校验 AI 库分类与配置
+python scripts/update_kb.py --all       # 共享 RSS 更新；未启用来源的库不会写出条目
 ```
 
 ## 分支命名规范

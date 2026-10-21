@@ -214,7 +214,7 @@ Artificial Analysis 页面记录的是 **Claude Fable 5（Adaptive Reasoning、M
 - **供应商对比**：Fable AA Index 62 略高于 GPT-5.6 Sol 61，但每项评测成本 $3.14 明显高于 Sol $0.95、Qwen $0.91、DeepSeek $0.27；必须用任务成功率证明溢价。
 - **降级与熔断**：准备 Opus/其他厂商高端模型作为超时与配额降级；长程任务要支持 checkpoint，避免失败后全量重跑。
 
-## 待核实
+## 没有准确数据
 
 - 官方固定快照 ID、速率限制和 SLA；
 - Fable 30 天保留要求在各云渠道的具体差异；

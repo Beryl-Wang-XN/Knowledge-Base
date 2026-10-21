@@ -229,7 +229,7 @@ Artificial Analysis 对 Gemini 3.1 Pro Preview 的记录：
 - **能力路由**：官方 High-thinking 基准很强，但 AA 综合 Index 48 低于 Sol/Fable/Qwen；应根据多模态、接地和具体任务评测选型，而不是用单一总分淘汰。
 - **供应链**：若走 Vertex AI，必须另建价格和区域条款档案，不能把 Developer API 价格直接当 Vertex 成本。
 
-## 待核实
+## 没有准确数据
 
 - 官方精确发布日期、知识截止与稳定版时间表；
 - Developer API / Vertex AI 的具体限流、SLA、区域和数据条款；
