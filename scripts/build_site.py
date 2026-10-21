@@ -11,6 +11,7 @@ framework.md 等），生成纯静态 HTML 站点到 knowledge/<domain>/site/。
 
 特性：
 - 每个条目生成独立详情页（modules/<模块>/<slug>.html），模块页为条目列表，避免长页面。
+- 读取 daily/*.md，生成每日学习页（daily/<slug>.html），内嵌 quiz；首页列出归档。
 - 支持 mermaid 图表（```mermaid 代码块自动渲染）。
 - 出处超链接由 Markdown 原生支持。
 设计：数据源唯一（Markdown），站点为构建产物；改内容改 Markdown，重跑本脚本即可。
@@ -20,6 +21,7 @@ from __future__ import annotations
 
 import html as html_lib
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -131,6 +133,22 @@ th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
 th{background:var(--card2);color:#fff}
 .mermaid{background:#f7f9fc;border-radius:10px;padding:16px;margin:16px 0;text-align:center}
 .note{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:14px 18px;color:var(--muted);font-size:14px;margin:16px 0}
+.player{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:16px 0}
+.player .t{color:#fff;font-weight:600}
+.player audio{width:100%;height:36px;margin-top:10px}
+.player p{color:var(--muted);font-size:13px;margin:8px 0 0}
+.quiz{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+.quiz h3{margin-top:0}
+.opt{display:flex;gap:10px;align-items:flex-start;background:var(--card2);border:1px solid var(--line);
+border-radius:10px;padding:8px 12px;margin:8px 0;cursor:pointer}
+.opt.right{border-color:var(--ok)}
+.opt.wrong{border-color:#ff6b6b}
+.quiz-check{margin-top:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-size:14px}
+.quiz-result{margin-top:10px;font-weight:600}
+.quiz-result.ok{color:var(--ok)}
+.quiz-result.bad{color:#ff8b8b}
+.quiz-explain{color:var(--muted);margin-top:6px}
 footer{max-width:1080px;margin:0 auto;padding:24px 20px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
 """
 
@@ -138,20 +156,160 @@ footer{max-width:1080px;margin:0 auto;padding:24px 20px;color:var(--muted);font-
 MERMAID_JS = ('<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>'
               '<script>mermaid.initialize({startOnLoad:true,theme:"default"});</script>')
 
+QUIZ_JS = """<script>
+document.querySelectorAll(".quiz").forEach(function (card) {
+  card.querySelector(".quiz-check").addEventListener("click", function () {
+    var answer = card.getAttribute("data-answer");
+    var picked = card.querySelector("input:checked");
+    var result = card.querySelector(".quiz-result");
+    var explain = card.querySelector(".quiz-explain");
+    if (!picked) {
+      result.hidden = false;
+      result.className = "quiz-result bad";
+      result.textContent = "先选一个选项";
+      explain.hidden = true;
+      return;
+    }
+    explain.hidden = false;
+    var ok = picked.value === answer;
+    result.hidden = false;
+    result.className = "quiz-result " + (ok ? "ok" : "bad");
+    result.textContent = ok ? "答对了" : "答错了";
+    card.querySelectorAll(".opt").forEach(function (lab) {
+      var input = lab.querySelector("input");
+      lab.classList.remove("right", "wrong");
+      if (input.value === answer) lab.classList.add("right");
+      else if (input.checked) lab.classList.add("wrong");
+    });
+  });
+});
+</script>"""
 
-def page(title: str, active: str, content: str, nav_items, need_mermaid=False) -> str:
+
+def split_h2(body: str) -> dict:
+    matches = list(re.finditer(r"(?m)^## (.+)\s*$", body))
+    sections = {}
+    for i, match in enumerate(matches):
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(body)
+        sections[match.group(1).strip()] = body[match.end():end].strip()
+    return sections
+
+
+def parse_quiz(text: str) -> list:
+    """解析每日页 Quiz。每题以 ### 开头，选项用 - [ ] / - [x]，解析用引用块。"""
+    items = []
+    for chunk in re.split(r"(?m)^###\s+", text):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        lines = chunk.splitlines()
+        heading = lines[0].strip()
+        options = []
+        question_lines = []
+        explain_lines = []
+        in_explain = False
+        for line in lines[1:]:
+            opt = re.match(r"^-\s+\[(x|X| )\]\s+(.*)$", line)
+            if opt and not in_explain:
+                options.append((opt.group(1).lower() == "x", opt.group(2).strip()))
+                continue
+            if line.startswith(">"):
+                in_explain = True
+                explain_lines.append(line[1:].strip())
+                continue
+            if in_explain:
+                if line.strip():
+                    explain_lines.append(line.strip())
+                continue
+            if line.strip():
+                question_lines.append(line.strip())
+        if not options:
+            continue
+        answers = [i for i, (ok, _) in enumerate(options) if ok]
+        if len(answers) != 1:
+            continue
+        question = " ".join(question_lines).strip()
+        items.append({
+            "label": f"{heading}. {question}" if question else heading,
+            "options": [label for _, label in options],
+            "answer": answers[0],
+            "explain": " ".join(explain_lines).strip(),
+        })
+    return items
+
+
+def render_quiz(items: list) -> str:
+    blocks = []
+    for i, item in enumerate(items):
+        opts = ""
+        for j, label in enumerate(item["options"]):
+            opts += (
+                f'<label class="opt"><input type="radio" name="q{i}" value="{j}">'
+                f"<span>{html_lib.escape(label)}</span></label>"
+            )
+        blocks.append(
+            f'<section class="quiz" data-answer="{item["answer"]}">'
+            f"<h3>{html_lib.escape(item['label'])}</h3>{opts}"
+            f'<button type="button" class="quiz-check">看答案</button>'
+            f'<p class="quiz-result" hidden></p>'
+            f'<p class="quiz-explain" hidden>{html_lib.escape(item["explain"])}</p>'
+            f"</section>"
+        )
+    return "\n".join(blocks)
+
+
+def is_sample_daily(meta: dict) -> bool:
+    return str(meta.get("kind", "")).strip().lower() == "sample"
+
+
+def find_podcast_audio(root: Path, rel: str) -> Path | None:
+    """口播稿同目录、同名的音频。正式每日为 YYYY-MM-DD.m4a，样例为 _sample.m4a。"""
+    if not rel:
+        return None
+    md = root / rel
+    if not md.exists():
+        return None
+    for ext in (".m4a", ".mp3", ".aac"):
+        audio = md.with_suffix(ext)
+        if audio.is_file():
+            return audio
+    return None
+
+
+def load_dailies(root: Path) -> list:
+    daily_root = root / "daily"
+    if not daily_root.exists():
+        return []
+    items = []
+    for path in sorted(daily_root.glob("*.md")):
+        if path.name.startswith(".") or path.stem in {"README"}:
+            continue
+        meta, body = parse_md(path)
+        items.append({
+            "path": path,
+            "meta": meta or {},
+            "sections": split_h2(body),
+        })
+    return items
+
+
+def page(title: str, active: str, content: str, nav_items, need_mermaid=False, need_quiz=False) -> str:
     nav = '<span class="brand">📚 AI 知识库</span>'
     for href, label, key in nav_items:
         cls = " active" if key == active else ""
         nav += f'<a class="{cls}" href="{href}">{label}</a>'
-    mm = MERMAID_JS if need_mermaid else ""
+    extra = ""
+    if need_mermaid:
+        extra += MERMAID_JS
+    if need_quiz:
+        extra += QUIZ_JS
     return f"""<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title}</title><style>{css()}</style></head>
 <body><header><nav>{nav}</nav></header><main>{content}</main>
 <footer>MaaS TokenHub · AI 知识库 · 由 Markdown 数据源自动构建 · 内容以联网核实的一手源为准</footer>
-{mm}</body></html>"""
+{extra}</body></html>"""
 
 
 def build(domain: str = "ai"):
@@ -163,7 +321,15 @@ def build(domain: str = "ai"):
     site.mkdir(exist_ok=True)
     (site / "modules").mkdir(exist_ok=True)
 
+    dailies = load_dailies(root)
+    real_daily = [item for item in dailies if not is_sample_daily(item["meta"])]
+    real_daily.sort(key=lambda item: str(item["meta"].get("date") or item["path"].stem), reverse=True)
+    nav_daily = (real_daily or dailies)
+    nav_daily_href = f"daily/{nav_daily[0]['path'].stem}.html" if nav_daily else None
+
     nav = [("index.html", "首页", "home")]
+    if nav_daily_href:
+        nav.append((nav_daily_href, "📅 每日", "daily"))
     for m in AI_MODULES:
         nav.append((f"modules/{m['dir']}.html", f"{m['letter']} {m['name']}", m["dir"]))
     nav.append(("modules/registry.html", "🗃️ 模型库", "registry"))
@@ -252,6 +418,85 @@ def build(domain: str = "ai"):
     (site / "framework.html").write_text(
         page("认知框架 · AI 知识库", "framework", fw_content, nav_for(0), need_mm_fw), encoding="utf-8")
 
+    # 每日学习页（数据源：daily/*.md；kind: sample 不计入打卡）
+    archive_real = ""
+    archive_sample = ""
+    if dailies:
+        (site / "daily").mkdir(exist_ok=True)
+    for item in real_daily + [d for d in dailies if is_sample_daily(d["meta"])]:
+        meta = item["meta"]
+        sections = item["sections"]
+        stem = item["path"].stem
+        title = str(meta.get("title") or stem)
+        card_md = sections.get("今日学习卡片", "")
+        intel_md = sections.get("今天的回顾") or sections.get("副轨情报", "")
+        quiz_items = parse_quiz(sections.get("Quiz", ""))
+        card_html = md2html(card_md) if card_md else "<p>今天没有学习卡片。</p>"
+        intel_html = md2html(intel_md) if intel_md else "<p>今天没有点名回顾项。</p>"
+        quiz_html = render_quiz(quiz_items) if quiz_items else '<div class="note">今天没有 quiz。</div>'
+        sample = is_sample_daily(meta)
+        if sample:
+            badge = '<span class="badge">样例 · 不计入打卡</span>'
+        else:
+            badge = f'<span class="badge v">{html_lib.escape(str(meta.get("date") or stem))}</span>'
+        entry = str(meta.get("entry") or "")
+        entry_link = ""
+        if entry.startswith("entries/") and entry.endswith(".md"):
+            href = "../modules/" + entry[len("entries/"):-3] + ".html"
+            entry_link = f'<p class="sub"><a href="{href}">查看完整条目</a></p>'
+        pubs = []
+        publish = meta.get("publish") if isinstance(meta.get("publish"), dict) else {}
+        podcast_rel = str(publish.get("podcast") or "")
+        audio_src = find_podcast_audio(root, podcast_rel)
+        if podcast_rel and (root / podcast_rel).exists() and not audio_src:
+            print(f"播客稿还没有同名音频：{podcast_rel}。先运行 scripts/synthesize_podcast.py")
+        player_html = ""
+        if audio_src:
+            audio_dir = site / "audio"
+            audio_dir.mkdir(exist_ok=True)
+            dest_name = f"{stem}{audio_src.suffix}"
+            shutil.copy2(audio_src, audio_dir / dest_name)
+            player_html = (
+                '<div class="player"><div class="t">播客</div>'
+                f'<audio controls preload="metadata" src="../audio/{html_lib.escape(dest_name)}"></audio>'
+                "<p>点播放试听。页面不会自动出声。</p></div>"
+            )
+        for label, key in (("小红书", "xhs"), ("播客", "podcast")):
+            if key == "podcast" and audio_src:
+                continue
+            rel = str(publish.get(key) or "")
+            if rel and (root / rel).exists():
+                pubs.append(f"{label} <code>{html_lib.escape(rel)}</code>")
+        publish_note = (
+            '<div class="note">同日文稿不进静态页，供手动使用：' + " · ".join(pubs) + "</div>"
+            if pubs else ""
+        )
+        content = f"""<h1>{html_lib.escape(title)}</h1>
+<p class="sub">{badge}</p>
+{entry_link}
+{player_html}
+{publish_note}
+<h2>今日学习卡片</h2>
+<article>{card_html}</article>
+<h2>今天的回顾</h2>
+<article>{intel_html}</article>
+<h2>Quiz</h2>
+{quiz_html}"""
+        (site / "daily" / f"{stem}.html").write_text(
+            page(f"{title} · 每日学习", "daily", content, nav_for(1),
+                 need_mermaid="mermaid" in card_html, need_quiz=bool(quiz_items)),
+            encoding="utf-8")
+        summary = html_lib.escape(first_paragraph(card_md) or "打开查看")
+        when = "样例" if sample else html_lib.escape(str(meta.get("date") or stem))
+        card = (
+            f'<a class="list-card" href="daily/{stem}.html"><div class="t">{html_lib.escape(title)}</div>'
+            f'<div class="d">{summary}…</div><div class="tags">{when}</div></a>'
+        )
+        if sample:
+            archive_sample += card
+        else:
+            archive_real += card
+
     # 首页
     mod_cards = ""
     for m in AI_MODULES:
@@ -264,11 +509,25 @@ def build(domain: str = "ai"):
     mod_cards += f"""<a class="mod-card" href="modules/registry.html">
 <div class="em">🗃️</div><div class="t">G · 模型档案库</div>
 <div class="m">★核心资产　·　{n_models} 个模型</div></a>"""
+    if archive_real or archive_sample:
+        daily_block = "<h2>每日学习</h2>"
+        if archive_real:
+            daily_block += archive_real
+        else:
+            daily_block += (
+                '<div class="note">还没有正式每日页。每次学习写入 '
+                "<code>daily/YYYY-MM-DD.md</code> 后重新构建，会出现在这里。</div>"
+            )
+        if archive_sample:
+            daily_block += "<h3>机制样例</h3>" + archive_sample
+    else:
+        daily_block = ""
     home = f"""<h1>📚 AI 知识库</h1>
 <p class="sub">MaaS TokenHub 产品经理的 AI 行业学习体系 · 深度锚点：理解技术选择背后的成本与商业含义</p>
 <div class="note">共 {total_entries} 条知识条目、{n_models} 个模型档案。
 主线：一次推理请求的生命周期（接入→调度→Prefill/Decode→执行→返回）。
 点击下方模块进入，或查看 <a href="framework.html">认知框架</a>。</div>
+{daily_block}
 <h2>知识模块</h2><div class="grid">{mod_cards}</div>"""
     (site / "index.html").write_text(page("AI 知识库", "home", home, nav_for(0)), encoding="utf-8")
 

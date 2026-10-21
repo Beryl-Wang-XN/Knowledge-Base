@@ -20,7 +20,7 @@ sources:
     url: ""
     tier: 一手
 created: 2026-08-31
-updated: 2026-08-31
+updated: 2026-10-21
 status: 已消化
 ---
 
@@ -116,11 +116,11 @@ Artificial Analysis 排行榜给出的是**单请求**中位输出速度（media
 - **市场真实成交价（定价空间锚点）**：[OpenRouter](https://openrouter.ai/models) 核实，开源模型 output 多在 $0.2~0.66/M（Qwen3.8 Flash $0.15/$0.47、DeepSeek V4 Flash Vision $0.22/$0.66、GLM 5.3 Flash $0.071/$0.238）。这是"自部署成本 vs 市场售价"比对的真实下界——若自建每 token 成本高于这些市场价，转售可能更划算。
 - **真实调用量信号（走量判断）**：[OpenRouter Rankings](https://openrouter.ai/rankings)（数据截至 2026-08-30，CC BY 4.0）周 token 处理量前列：Ox Alpha 15.7T、DeepSeek V4 Flash 0731 12.3T、MiMo-V2.5 9.14T、GPT-5.6 Luna 7.79T、Gemini 3.7 Flash 3.95T（+120%）。**低价开源模型（DeepSeek Flash）与低价旗舰档（GPT Luna）占据调用量头部**，印证"单位成本低 = 走量强"的商业逻辑。
 
-### 待核实项（必须用实测替换的参数）
+### 没有准确数据
 
-- **单卡聚合吞吐（batching 后的总 tok/s）**：这是模型的关键分母，取决于具体模型、量化、序列长度、并发与引擎，Artificial Analysis 只给单请求速度，**聚合吞吐待实测** → 上例 3,000 tok/s 为示意值。
-- **自建单卡真实小时成本**：折旧年限、实际电价、PUE、运维分摊 → 待核实（见 [cost-composition](cost-composition.md)）。
-- **input/output 成本拆分**：Prefill 与 Decode 单位成本不同，精细模型应分别建 input/output 的每 token 成本 → 具体系数待实测。
+- **单卡聚合吞吐**：没有准确数据。上面的 3,000 tok/s 只是示意，用来演示算法。
+- **自建单卡真实小时成本**：没有准确数据。见 [cost-composition](cost-composition.md)。
+- **input / output 每 token 成本系数**：没有准确数据。
 
 ## 分类 / 对比
 

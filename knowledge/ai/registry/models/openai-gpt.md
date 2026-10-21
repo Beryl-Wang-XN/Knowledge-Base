@@ -96,7 +96,7 @@ sources:
     url: https://livebench.ai/
     tier: 独立评测
     verified: 2026-08-31
-updated: 2026-08-31
+updated: 2026-10-21
 ---
 
 ## 概述
@@ -156,7 +156,7 @@ flowchart TD
 |---:|---:|
 | $8.00 | $30.00 |
 
-当前模型详情页称促销价格至少持续到 **2026-11-21**。这意味着 MaaS 不能把当前牌价当永久成本，应对价格版本设置有效期并准备调价或切路由。
+2026-08-31 的模型详情页曾称促销价格至少持续到 **2026-11-21**。2026-10-21 再抓 OpenRouter 端点时，各端点 `discount` 为 0，渠道价已与官方档位对齐，这次看不到那次 50% 仍在生效。牌价仍会变，合同里应保留调价条款。
 
 [OpenAI 官方 Pricing](https://platform.openai.com/docs/pricing)已进一步核实不同处理模式，单位均为美元/百万 tokens：
 
@@ -179,17 +179,16 @@ Priority processing 已于 2026-07-30 更名为 Fast mode；API 仍接受 `servi
 
 ### OpenRouter 聚合渠道（非厂商一手规格源）
 
-[OpenRouter 模型页](https://openrouter.ai/openai/gpt-5.6-sol)与[端点 API](https://openrouter.ai/api/v1/models/openai/gpt-5.6-sol/endpoints)确认 `openai/gpt-5.6-sol` 已上架，聚合 OpenAI、Amazon Bedrock 和 Azure 共 7 个端点。其当前 OpenAI 路线处于 50% 折扣：
+[OpenRouter 端点 API](https://openrouter.ai/api/v1/models/openai/gpt-5.6-sol/endpoints) 于 2026-10-21 再抓一次。接口里的端点名是 `openai/gpt-5.6-sol-20260709`，这是渠道侧的模型名，不是 OpenAI 公布的不可变快照 ID。各端点 `discount` 为 0。短上下文价格（美元/百万 tokens，输入/缓存读取/缓存写入/输出）：
 
-| OpenRouter 路线 | 短上下文输入/输出 | ≥272K 输入/输出 |
-|---|---:|---:|
-| OpenAI Flex | $1 / $5 | $2 / $7.50 |
-| OpenAI Standard | $2 / $10 | $4 / $15 |
-| OpenAI Fast | $4 / $20 | $8 / $30 |
-| Amazon Bedrock US | $4.40 / $22 | $8.80 / $33 |
-| Azure | $5 / $30 | $10 / $45 |
+| OpenRouter 路线 | 短上下文 | 提示 ≥272K |
+|---|---|---|
+| OpenAI Flex | $2 / $0.20 / $2.50 / $10 | $4 / $0.40 / $5 / $15 |
+| OpenAI 标准、Azure 标准 | $4 / $0.40 / $5 / $20 | $8 / $0.80 / $10 / $30 |
+| Azure 美国、Azure 欧洲、Amazon Bedrock `us-east-1` | $4.40 / $0.44 / $5.50 / $22 | $8.80 / $0.88 / $11 / $33 |
+| OpenAI Fast | $8 / $0.80 / $10 / $40 | $16 / $1.60 / $20 / $60 |
 
-这些是 OpenRouter 渠道的促销或云端点价，不应覆盖 OpenAI 官方直连 Standard 牌价。它们说明 TokenHub 可通过聚合路由获得阶段性成本优势和故障切换，但必须锁定 Provider、记录折扣有效期并监控实际账单。
+区域端点比标准档高约 10%，与官方「区域处理加收 10%」一致。这些是渠道价，不覆盖 OpenAI 直连牌价，也不等于我方合同价。2026-08-31 记过的 50% 折扣在这次响应里没有出现。
 
 ## 能力与榜单证据
 
@@ -233,13 +232,13 @@ Artificial Analysis 对 **GPT-5.6 Sol（max）**的独立记录：
 - **长上下文守门**：在 272K 前设置硬路由节点；通过 RAG、去重、摘要或分块尽量留在标准档。确需超长上下文时，报价中体现阶跃成本。
 - **缓存产品化**：固定 system prompt 和重复代码库前缀可利用 $0.40 缓存读取，但必须按租户隔离 cache key，避免跨租户信息泄露。
 - **供应商策略**：OpenAI 作为能力和生态标杆保留，但不应成为唯一高端供应。用 Claude、Gemini、Qwen、DeepSeek 做场景级备份，降低涨价、限流和区域故障风险。
-- **价格有效期**：当前促销至少至 2026-11-21；对客户合同应保留供应商价格变化条款，避免锁死长期低价。
+- **价格有效期**：2026-10-21 的渠道接口里看不到 50% 折扣。对客户合同仍应保留供应商价格变化条款。
 
-## 待核实
+## 没有准确数据
 
 - 官方精确发布日期和不可变快照 ID；
 - 官方限流、SLA 与区域数据处理条款；
-- OpenRouter 50% 促销的明确截止日期；
+- OpenRouter 各 Provider 价格的更新频率（2026-10-21 这次抓取 `discount` 为 0，接口没有给出截止日期）；
 - LMArena、LiveBench 分项；
 - 我方采购折扣、真实调用量、售价、毛利和 P95 延迟。
 
@@ -258,5 +257,6 @@ Artificial Analysis 对 **GPT-5.6 Sol（max）**的独立记录：
 
 | 日期 | 变更（价格/能力/版本） |
 |---|---|
-| 2026-08-31 | 补抓官方 Pricing，核实 Standard/Batch/Flex/Fast 与长上下文缓存价；补充 OpenRouter 7 个端点和当前促销渠道价。 |
+| 2026-10-21 | 再抓 OpenRouter 端点：`discount` 为 0，Flex/标准/Fast 与官方档位对齐，区域端点约 +10%。不再把 50% 写成当前事实。 |
+| 2026-08-31 | 补抓官方 Pricing，核实 Standard/Batch/Flex/Fast 与长上下文缓存价；补充 OpenRouter 端点和当时的促销渠道价。 |
 | 2026-08-31 | 以官方模型页重写为 GPT-5.6 Sol；核实 1.05M/128K、$4/$0.4/$20、272K 长上下文溢价和 AA 评测。 |

@@ -158,8 +158,8 @@ FP4 的价值不只是提高峰值数字。更低位宽意味着相同 HBM 可�
 | H100 NVL，单 GPU | 94GB | 3.9TB/s | 3,341 TFLOPS，**含稀疏** | 600GB/s | 350–400W，可配置 |
 | H200 SXM，单 GPU | 141GB HBM3e | 4.8TB/s | 3,958 TFLOPS，**含稀疏** | 900GB/s | 最高 700W，可配置 |
 | H200 NVL，单 GPU | 141GB HBM3e | 4.8TB/s | 3,341 TFLOPS，**含稀疏** | 900GB/s | 最高 600W，可配置 |
-| DGX B200 中 Blackwell GPU，按 8-GPU 官方整机值÷8 | 180GB HBM3e | 8TB/s | 9 PFLOPS sparse / 4.5 PFLOPS dense | 约 1.8TB/s（聚合值÷8） | 单 GPU **待核实**；整机最大约 14.3kW |
-| GB200 Superchip，1 CPU + 2 GPU | 372GB HBM3e（2 GPU 合计） | 16TB/s（2 GPU 合计） | 20 PFLOPS sparse / 10 PFLOPS dense（2 GPU 合计） | 3.6TB/s（官方 Superchip 表口径） | **待核实** |
+| DGX B200 中 Blackwell GPU，按 8-GPU 官方整机值÷8 | 180GB HBM3e | 8TB/s | 9 PFLOPS sparse / 4.5 PFLOPS dense | 约 1.8TB/s（聚合值÷8） | HGX B200 最高可配置 1 kW；整机最大约 14.3kW |
+| GB200 Superchip，1 CPU + 2 GPU | 372GB HBM3e（2 GPU 合计） | 16TB/s（2 GPU 合计） | 20 PFLOPS sparse / 10 PFLOPS dense（2 GPU 合计） | 3.6TB/s（官方 Superchip 表口径） | 没有准确数据 |
 
 数据来源：[H100 官方页](https://www.nvidia.com/en-us/data-center/h100/)、[H200 官方页](https://www.nvidia.com/en-us/data-center/h200/)、[DGX B200 官方页](https://www.nvidia.com/en-us/data-center/dgx-b200/)、[GB200 NVL72 官方页](https://www.nvidia.com/en-us/data-center/gb200-nvl72/)，均于 2026-08-31 经 web_fetch 核实。
 
@@ -170,7 +170,7 @@ FP4 的价值不只是提高峰值数字。更低位宽意味着相同 HBM 可�
 | 系统 | GPU / CPU | GPU HBM | HBM 带宽 | NVLink 域/聚合带宽 | FP8 | 功耗/冷却 |
 |---|---|---:|---:|---:|---:|---|
 | DGX B200 | 8× Blackwell GPU | 1,440GB HBM3e | 64TB/s 聚合 | 14.4TB/s 聚合 | 72 PFLOPS sparse / 36 dense | 最大约 14.3kW |
-| GB200 NVL72 | 72× Blackwell GPU + 36× Grace CPU | 13.4TB HBM3e | 576TB/s 聚合 | 单一 72-GPU 域，130TB/s | 720 PFLOPS sparse / 360 dense | 液冷；具体 kW **待核实** |
+| GB200 NVL72 | 72× Blackwell GPU + 36× Grace CPU | 13.4TB HBM3e | 576TB/s 聚合 | 单一 72-GPU 域，130TB/s | 720 PFLOPS sparse / 360 dense | 液冷；机架功耗没有准确数据 |
 
 ### 官方性能主张及限制
 
@@ -199,7 +199,7 @@ FP4 的价值不只是提高峰值数字。更低位宽意味着相同 HBM 可�
 - **误区五：把“含稀疏”峰值当所有 LLM 都可达。** 模型需满足硬件支持的结构化稀疏条件并由软件栈实际利用；否则不能用 sparse 峰值测成本。
 - **误区六：把厂商“最高 X 倍”当普遍结论。** batch、输入/输出长度、延迟目标、模型、精度和系统数量都可能不同。
 - **注意：GB 与 GiB、TB/s 与 TiB/s 口径不同。** 本条目保留 NVIDIA 官方十进制标法，不擅自换算。
-- **待核实项**：H200 Datasheet 的 PDF 阅读器正文未能由 web_fetch 解析；精确规格已改由可读取的 NVIDIA H200 官方产品页交叉核实。B200 单 GPU TDP、GB200 NVL72 机架 kW 未从本次可读取官方正文核实。
+- **没有准确数据**：GB200 Superchip 功耗、GB200 NVL72 机架功耗。HGX B200 单卡上限已另行核实为可配置到 1 kW，见成本构成条目。
 
 ## 对我的意义 ★
 

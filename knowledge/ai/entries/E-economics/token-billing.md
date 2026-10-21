@@ -17,7 +17,7 @@ sources:
     tier: 工具站
     verified: 2026-08-31
 created: 2026-08-31
-updated: 2026-08-31
+updated: 2026-10-21
 status: 已消化
 ---
 
@@ -34,7 +34,7 @@ MaaS（Model-as-a-Service）的商业模式本质是"**把 GPU 算力包装成�
 ### 1. Token 是什么、怎么计量
 
 - **Token 是文本被切分后的最小计费单位**。分词器（tokenizer）把文本切成 token：一个 token 可能是一个词、词的一部分、或一个标点/字符。
-- 经验换算（**行业通识，本次未经一手源核实，仅供粗估**）：英文常按 1 token ≈ 0.75 个单词估算；中文因编码方式，1 个汉字常占 1~2 token。精确 token 数由具体模型的分词器决定，须以 API 返回的实际 usage 为准。
+- 英文粗估已由 [OpenAI Tokenizer](https://platform.openai.com/tokenizer) 写明：常见英文大约 **1 token ≈ 4 个字符，约等于 ¾ 个单词**（100 tokens ≈ 75 words）。这只是经验值。中文「1 个汉字约占 1~2 token」**不在该页**，仍不能当成已核实换算。精确 token 数由具体模型的分词器决定，须以 API 返回的实际 usage 为准。
 - 多模态输入（图像、音频、视频）也被折算成 token 或按时长/张数计费——例如 OpenAI 的实时音频、图像生成、Sora 视频分别有独立计费档。
 
 ### 2. input token 与 output token 分开计价（且 output 更贵）
@@ -76,7 +76,11 @@ flowchart TB
 
 以 [Anthropic Opus 5](https://claude.com/pricing) 为例（$/MTok）：基础 input $5 → 缓存写入 $6.25（=1.25×）、缓存读取 $0.50（=0.1×）。[OpenAI gpt-5.6-sol](https://platform.openai.com/docs/pricing) 短上下文：input $4 → cached input $0.40（=0.1×）、cache write $5.00（=1.25×）。
 
-**含义**：只要同一段前缀被复用 **≥2 次**，"写入一次 + 后续命中读取"的总成本就低于"每次全价重算"，前缀越长、复用越多，省得越多。Anthropic 还区分缓存生存时间（TTL）：默认 **5 分钟**，另有 **1 小时扩展缓存**（价格不同，具体数字待核实）。
+**含义**：只要同一段前缀被复用 **≥2 次**，"写入一次 + 后续命中读取"的总成本就低于"每次全价重算"，前缀越长、复用越多，省得越多。
+
+[Anthropic 定价文档](https://platform.claude.com/docs/en/about-claude/pricing)（2026-10-21）把缓存写成相对基础 input 的倍数：**5 分钟写入 1.25×，1 小时写入 2×，命中读取默认 0.1×**。少数型号的读取折扣更深（文档脚注：Fable 5.1 / Mythos 5.1 为 0.025×，Opus 5.5 / Sonnet 5.5 为 0.05×）。以 Claude Fable 5 为例：基础 input $10 / MTok，5 分钟写入 $12.50，1 小时写入 $20，命中读取 $1。接口里把 1 小时缓存写成 `cache_control.ttl: "1h"`。
+
+同一页的长上下文口径：Claude 4.6 及之后的型号（Claude Haiku 5.5 除外）和 Claude Mythos Preview，**整段 1M 上下文按标准单价计费**，缓存和 Batch 折扣也按标准倍数覆盖全窗。Claude Haiku 5.5 按提示长度分档，提示超过 100,000 tokens（含缓存读和缓存写）用更高单价。
 
 ### Batch / Flex 档：以时延换折扣
 
@@ -105,8 +109,7 @@ flowchart TB
 | gpt-5.6-luna | $0.20 | $0.02 | $0.25 | $1.20 | 6× |
 
 - **档位系数**：Batch = Standard 的 50%；Flex = Batch 同价；Fast mode = Standard 的 200%。
-- **长上下文档**：input 约翻倍、output 约 1.5 倍（如 sol 长上下文 input $8 / output $30）。
-- gpt-5.6-sol 促销价至少持续到 **2026-11-21**。
+- **长上下文档**：input 约翻倍、output 约 1.5 倍（如 sol 长上下文 input $8 / output $30）。2026-08-31 模型页写过促销至少到 2026-11-21；2026-10-21 的 OpenRouter 端点里 `discount` 为 0，渠道价与上表官方档位一致。
 
 ### Anthropic Claude 模型 —— [来源](https://claude.com/pricing)
 
@@ -136,7 +139,7 @@ OpenRouter 聚合多家供应商对同一模型的报价，是验证"官方牌�
 
 - **交叉验证结论**：开源/中国模型的 output/input 倍数多在 **2~3.3×**，明显低于 OpenAI/Anthropic 旗舰的 5~6×；且**绝对价格低一个数量级**（开源 output 常 <$1/M vs 旗舰 $10~50/M）。这印证了"闭源旗舰靠能力溢价、开源靠低价走量"的市场分层。
 - **机制补充**：OpenRouter 支持**同一模型多供应商路由**（不同 provider 对同款开源模型报价可不同），可按价格/延迟自动择优——这是 API 转售型 MaaS 的降本手段。**注**：本次未逐一进入各模型详情页核实"同一模型跨供应商的具体报价差值"，该差异的精确数字待核实。
-- **GPT/Claude/Gemini 在 OpenRouter 的报价**：列表页默认未展示，需进各模型详情页 → 具体数字待核实（其官方牌价已由上方 OpenAI/Anthropic 表核实）。
+- **GPT 在 OpenRouter 的报价**（2026-10-21 抓取 [Endpoints API](https://openrouter.ai/api/v1/models/openai/gpt-5.6-sol/endpoints)，单价是每 token，下面换成每百万 token）：OpenAI Flex 为 input $2 / output $10；OpenAI 标准档与 Azure 标准档为 $4 / $20；Azure 美国、Azure 欧洲和 Amazon Bedrock `us-east-1` 为 $4.40 / $22；OpenAI Fast（priority）为 $8 / $40。提示达到 272,000 tokens 后，这些端点的 input/output 在各自短上下文价上再抬一档。抓取时各端点的 `discount` 都是 0。这是渠道价，不是我方合同价。Claude 与 Gemini 的渠道价以各自模型档案里的同日或更晚抓取为准，不在这里另抄一份。
 
 ## 分类 / 对比
 
@@ -146,14 +149,14 @@ OpenRouter 聚合多家供应商对同一模型的报价，是验证"官方牌�
 |---|---|---|
 | 计费单位 | $/MTok（文本） | $/MTok |
 | input/output 关系 | output ≈ 5~6× input | output = 5× input（全系一致） |
-| 缓存读取折扣 | ≈ input 的 10% | ≈ input 的 10% |
-| 缓存写入 | ≈ input 的 125% | ≈ input 的 125% |
+| 缓存读取折扣 | ≈ input 的 10% | 默认 ≈ input 的 10%；Fable 5.1 / Mythos 5.1 为 2.5%，Opus 5.5 / Sonnet 5.5 为 5% |
+| 缓存写入 | ≈ input 的 125% | 5 分钟 125%；1 小时 200% |
 | Batch 折扣 | 5 折（另有 Flex 同价） | 5 折 |
 | 加速档 | Fast mode = 2× | Fast mode = 2×（Opus 5 提速≤2.5×） |
 | 区域/合规加价 | 数据驻留区域 +10% | US-only +10% |
-| 长上下文 | 分短/长档，长档加价 | 待核实（页面未列明） |
+| 长上下文 | 分短/长档，长档加价 | Claude 4.6 及之后（Haiku 5.5 除外）的 1M 窗按标准单价；Haiku 5.5 超过 10 万 token 提示加价 |
 
-**结论**：两家在"缓存 10%/125%、Batch 5 折、Fast 2 倍"上高度趋同——说明这些系数已成为行业**事实标准**，是我方定价时可直接对标的基准线。
+**结论**：两家默认档是缓存读取约为 input 的 10%、5 分钟写入约为 125%、Batch 5 折、Fast 2 倍。Anthropic 另有 1 小时写入（2 倍）和少数型号更深的读取折扣。对标时按型号和缓存时长取系数。
 
 ## 常见误区 / 注意点
 

@@ -3,28 +3,42 @@
 
 name: ai
 title: AI 知识库
-description: 人工智能相关知识，含大模型、机器学习、工程实践等。
+description: MaaS TokenHub 用的 AI 技术侧知识库，按 A–G 模块组织。
 
-# 内容分类（用于组织 entries/ 下的子目录与索引）
+# 必须与 entries/ 下的目录名一致。scripts/validate.py 按这个列表检查。
+# G 模型档案在 registry/，不在 entries/。
 categories:
-  - llm            # 大语言模型
-  - ml             # 机器学习基础
-  - engineering    # AI 工程与部署
-  - papers         # 论文笔记
-  - tools          # 工具与框架
+  - A-model
+  - B-inference
+  - C-compute
+  - D-serving
+  - E-economics
+  - F-landscape
 
-# 更新源（由 shared/core/fetcher 消费；type 决定使用哪个抓取器）
-sources:
-  - name: example-rss
-    type: rss
-    url: "https://example.com/ai/feed.xml"
-    enabled: false
+# 本库不从这里拉情报。每天 08:00 的定时任务直接写 inbox/，不读这个列表。
+# 留空，避免把关掉的示例 RSS 当成正在使用的更新源。
+sources: []
 
-# 更新调度（供自动化/automation 参考，cron 表达式）
+# 与已启用的定时任务一致：每天 08:00 只把过去 24 小时的情报写入 inbox/。
+# 这条 cron 是说明，任务本身不读取上面的 sources。
 schedule:
-  cron: "0 8 * * 1"   # 每周一 08:00
+  cron: "0 8 * * *"   # 每天 08:00
 
 # 索引配置
 index:
   output: index/
   build_search_index: true
+
+# 呈现。播客音色由 scripts/synthesize_podcast.py 读取。
+publish:
+  podcast:
+    engine: edge-tts
+    voice: zh-CN-XiaoxiaoNeural
+    voice_label: 晓晓
+  xiaoyuzhou:
+    site: https://podcaster.xiaoyuzhoufm.com
+    pid: 6ad87d5c40b919d77a370338
+    title: "beryl's AI learning"
+    title_max: 20
+    title_review: pending
+    episode: 待主体认证后存草稿

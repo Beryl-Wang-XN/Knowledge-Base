@@ -147,7 +147,7 @@ else:  # FCFS
 - **vLLM 分块预填充**：V1 默认尽量启用，调度**优先 decode**；`max_num_batched_tokens` 较小（~2048）利于 ITL，**> 8192** 官方推荐用于最优吞吐。
 - **vLLM 优先级调度**：`SchedulerConfig.policy` 默认 `fcfs`；设为 `priority` 时按 **priority 值（越小越优先）+ 到达时间**排序，抢占时选 `max((priority, arrival_time))`（即**低优先级、晚到者先被抢占**），被抢占请求放回等待队列头部（源码 `scheduler.py` 核实）。
 
-> ⚠️ 待核实：SLA 分级、准入控制（Admission Control）的**具体阈值/实现**属工程实践，vLLM 未给出统一策略，仍**待深入**（可结合业务自定义 priority 值与网关限流实现）。
+> 准入控制的具体阈值没有准确数据。vLLM 没有给出统一策略。
 
 ## 分类 / 对比（如适用）
 

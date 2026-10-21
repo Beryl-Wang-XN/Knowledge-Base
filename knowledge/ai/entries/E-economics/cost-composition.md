@@ -12,6 +12,10 @@ sources:
     url: https://www.nvidia.com/en-us/data-center/dgx-b200/
     tier: 一手
     verified: 2026-08-31
+  - name: NVIDIA HGX B200 组件说明（单卡最高 1 kW）
+    url: https://docs.nvidia.com/enterprise-reference-architectures/hgx-ai-factory-h100-h200-b200/latest/components.html
+    tier: 一手
+    verified: 2026-10-21
   - name: Lambda GPU Cloud 官方按需定价页
     url: https://lambda.ai/service/gpu-cloud
     tier: 一手
@@ -20,7 +24,7 @@ sources:
     url: https://www.semianalysis.com/
     tier: 二手
 created: 2026-08-31
-updated: 2026-08-31
+updated: 2026-10-21
 status: 已消化
 ---
 
@@ -68,16 +72,16 @@ GPU 既是成本大头，也直接决定电力开销。核实到的 NVIDIA 官�
 |---|---|---|---|---|
 | H100 SXM | 80 GB / 3.35 TB/s | 最高 **700 W** | **$3.99~4.29** /GPU/小时 | [NVIDIA](https://www.nvidia.com/en-us/data-center/h100/) / [Lambda](https://lambda.ai/service/gpu-cloud) |
 | H100 PCIe | 80 GB | — | $3.29 /GPU/小时（1卡档） | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| B200 (Blackwell) SXM6 | ~180 GB HBM3e | — （整机 DGX B200 8 卡 **~14.3 kW**） | **$6.69~6.99** /GPU/小时 | [NVIDIA](https://www.nvidia.com/en-us/data-center/dgx-b200/) / [Lambda](https://lambda.ai/service/gpu-cloud) |
+| B200 (Blackwell) | 180 GB HBM3e（HGX B200 单卡） | **最高可配置 1 kW**（HGX B200 官方组件说明）；Blackwell Datasheet 里 GB200 NVL 最高可配置 **1,200 W**。整机 DGX B200 8 卡仍约 **14.3 kW** | **$6.69~6.99** /GPU/小时 | [HGX 组件说明](https://docs.nvidia.com/enterprise-reference-architectures/hgx-ai-factory-h100-h200-b200/latest/components.html) / [DGX B200](https://www.nvidia.com/en-us/data-center/dgx-b200/) / [Lambda](https://lambda.ai/service/gpu-cloud) |
 | A100 SXM | 80 GB | — | $2.79 /GPU/小时（8卡档） | [Lambda](https://lambda.ai/service/gpu-cloud) |
 
-> 注：Lambda 价格按实例卡数分档，卡越多单价略低（如 B200 8卡 $6.69 vs 1卡 $6.99）；且**无出口流量费、按分钟计费**。DGX B200 整机 ~14.3 kW 含 CPU、网络等，非纯 GPU 功耗；单卡 B200 独立 TDP **待核实**（官方页仅给整机数据）。
+> 注：Lambda 价格按实例卡数分档，卡越多单价略低（如 B200 8卡 $6.69 vs 1卡 $6.99）；且**无出口流量费、按分钟计费**。DGX B200 整机 ~14.3 kW 含 CPU、网络等，不是 8 张卡 TDP 的简单相加。单卡功耗以 NVIDIA Blackwell Datasheet 的「Max Thermal Design Power」为准：HGX B200 一列是 **configurable up to 1,000 W**，GB200 NVL72 / NVL4 是 **configurable up to 1,200 W**（2026-10-21 核实）。这是可配置上限，不是每张卡恒定功耗。
 
 ### 从功耗到电费的推导
 
 以 H100 SXM 满载 700 W 为例，单卡满载年耗电 ≈ 0.7 kW × 8760 h ≈ **6,132 kWh/年**（仅 GPU 本体，未含 PUE 损耗与配套 CPU/网络）。若 PUE 取 1.3，则实际取电 ≈ 6,132 × 1.3 ≈ 7,972 kWh/年。乘以电价即得年电费。
 
-> ⚠️ 具体电价（$/kWh）、数据中心实际 PUE 因地区/机房差异极大，**待核实**——须用实际采购电价与机房 PUE 填参，不可套用行业泛值。
+> 电价和机房 PUE 没有准确数据。上面的 1.3 只是用来演算的假设。
 
 ### 利用率：成本的隐形乘数
 
@@ -90,17 +94,17 @@ GPU 既是成本大头，也直接决定电力开销。核实到的 NVIDIA 官�
 
 ## 关键数据与事实（已核实）
 
-> 2026-08-31 经 web_fetch 核实。
+> 2026-08-31 经 web_fetch 核实；B200 单卡功耗上限于 2026-10-21 补核。
 
 - **H100 SXM**：显存 80 GB、带宽 3.35 TB/s、**最大 TDP 700 W**、FP8 算力 3,958 TFLOPS（含稀疏）。[NVIDIA 官方](https://www.nvidia.com/en-us/data-center/h100/)
-- **DGX B200 整机**（8× Blackwell）：显存合计 1,440 GB（单卡约 180 GB HBM3e）、显存带宽合计 64 TB/s、**系统最大功耗约 14.3 kW**；官方称相较 DGX H100 训练 3×、推理 15×。[NVIDIA 官方](https://www.nvidia.com/en-us/data-center/dgx-b200/)
+- **HGX B200 单卡**：显存 180 GB HBM3e，最大功耗可配置到 **1 kW**。[NVIDIA HGX 组件说明](https://docs.nvidia.com/enterprise-reference-architectures/hgx-ai-factory-h100-h200-b200/latest/components.html)。Blackwell Datasheet 中 GB200 NVL72 / NVL4 最高可配置 **1,200 W**。这是上限，不是恒定功耗。
+- **DGX B200 整机**（8× Blackwell）：显存合计 1,440 GB、显存带宽合计 64 TB/s、**系统最大功耗约 14.3 kW**；官方称相较 DGX H100 训练 3×、推理 15×。[NVIDIA 官方](https://www.nvidia.com/en-us/data-center/dgx-b200/)
 - **Lambda 按需租赁价**（$/GPU/小时）：H100 SXM $3.99~4.29、H100 PCIe $3.29、B200 SXM6 $6.69~6.99、A100 SXM(80GB) $2.79。[Lambda 官方](https://lambda.ai/service/gpu-cloud)
 
-### 待核实项
+### 没有准确数据
 
-- **单卡 B200 独立 TDP**：NVIDIA DGX B200 页仅给整机 ~14.3 kW，未列单卡 TDP → 待核实。
-- **数据中心 PUE、工业电价、机房/带宽/人力的具体金额**：因地区与规模差异极大 → 待核实（用实际采购数据填参）。
-- **SemiAnalysis 的 GPU TCO / 集群经济学具体拆解数字**：目标站点启用反爬（JavaScript 校验），web_fetch 未能取得正文 → 待核实（需订阅或人工阅读后回填）。
+- **数据中心 PUE、工业电价、机房、带宽和人力金额**：没有准确数据。
+- **SemiAnalysis 的 GPU TCO 数字**：没有准确数据。
 
 ## 分类 / 对比
 
@@ -133,6 +137,6 @@ GPU 既是成本大头，也直接决定电力开销。核实到的 NVIDIA 官�
 - [NVIDIA H100 GPU 规格](https://www.nvidia.com/en-us/data-center/h100/)（NVIDIA 官方，2026-08-31 核实）
 - [NVIDIA DGX B200 规格](https://www.nvidia.com/en-us/data-center/dgx-b200/)（NVIDIA 官方，2026-08-31 核实）
 - [Lambda GPU Cloud 定价](https://lambda.ai/service/gpu-cloud)（Lambda 官方，2026-08-31 核实）
-- SemiAnalysis（https://www.semianalysis.com/ ，反爬未取得正文，成本拆解数字待核实）
+- SemiAnalysis（https://www.semianalysis.com/ ，正文未取得，TCO 数字没有准确数据）
 - 关联条目：[GPU 规格](../C-compute/gpu-specs.md)、[显存构成](../C-compute/gpu-memory-composition.md)、[利用率 MFU](../C-compute/gpu-utilization-mfu.md)、[单位经济](unit-economics.md)
 - 关键术语对照：TCO（总拥有成本）、Depreciation（折旧）、TDP（热设计功耗）、PUE（电源使用效率）、Fixed/Variable Cost（固定/可变成本）、Utilization（利用率）、On-demand（按需租赁）。
