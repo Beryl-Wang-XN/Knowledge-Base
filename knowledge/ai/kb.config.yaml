@@ -19,8 +19,9 @@ categories:
 # 留空，避免把关掉的示例 RSS 当成正在使用的更新源。
 sources: []
 
-# 与已启用的定时任务一致：每天 08:00 只把过去 24 小时的情报写入 inbox/。
-# 这条 cron 是说明，任务本身不读取上面的 sources。
+# 与已启用的定时任务一致：每天 08:00 只把过去 24 小时、且已对过一手源的情报写入 inbox/（status: open）。
+# 定时任务只改 inbox/ 并直推 feature/beryl-build-knowledge-base；不新开分支/PR，不写 entries、registry、daily、publish、progress、learning-plan。
+# 若某天未推送，当天留空，不在次日补写。此处 cron 仅作说明，任务本身不读取上面的 sources。
 schedule:
   cron: "0 8 * * *"   # 每天 08:00
 

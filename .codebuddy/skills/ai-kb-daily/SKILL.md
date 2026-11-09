@@ -1,6 +1,6 @@
 ---
 name: ai-kb-daily
-description: "Drives the daily co-building of the user's AI knowledge base at knowledge/ai/ (a MaaS TokenHub PM learning system). This skill should be used when the user says things like 开始今天的学习, 今天学什么, 拉一下最新AI资讯, 更新知识库, 做今天的学习材料/小红书/播客, 回顾 inbox, 这页没看懂, or when running the one-time full backfill of module tabs. It orchestrates reporting last progress, pulling the last 24h of industry updates online, advancing one 20-30 min learning unit, writing entries and model registry, generating the static HTML site with quiz plus Xiaohongshu draft and podcast script, answering follow-up questions on the daily page, reviewing the inbox, and updating the check-in log."
+description: "Drives the daily co-building of the user's AI knowledge base at knowledge/ai/ (a MaaS TokenHub PM learning system). This skill should be used when the user says things like 开始今天的学习, 今天学什么, 更新知识库, 做今天的学习材料/小红书/播客, 回顾 inbox, 这页没看懂, or when running the one-time full backfill of module tabs. It orchestrates reporting last progress, advancing one 20-30 min learning unit, writing entries and model registry, generating the static HTML site with quiz plus Xiaohongshu draft and podcast script, answering follow-up questions on the daily page, reviewing the inbox, and updating the check-in log."
 ---
 
 # AI 知识库每日共建 (ai-kb-daily)
@@ -10,6 +10,14 @@ description: "Drives the daily co-building of the user's AI knowledge base at kn
 驱动用户（MaaS TokenHub 产品经理）的 AI 知识库 `knowledge/ai/` 的**每日共建**与**首次全量填充**。
 把「联网拉取最新信息 → 学习一个知识点 → 沉淀入库 → 生成多端呈现物 → 打卡」这一整套动作固化为可复用流程。
 会话里说「开始今天的学习」跑完整流程。每天 8:00 的定时任务只把过去 24 小时的情报放进 `inbox/`。学习从回顾这个队列开始：用户点名今天要学的回顾项，再加上计划里的下一课，一起核实后生成每日页、小红书草稿和播客。
+
+## 8:00 定时任务硬规则（新增，优先级高于其他流程说明）
+
+1. 只写 `knowledge/ai/inbox/` 下 `status: open` 的新文件。
+2. 直接提交并推送到 `feature/beryl-build-knowledge-base`。
+3. 不新开分支，不新开拉取请求。
+4. 不写 `entries/`、`registry/`、`daily/`、`publish/`、`progress.md`、`learning-plan.md`。
+5. 某天若没有推进到推送就留空，不在下一天补拉或补写。
 
 ## 何时使用
 
@@ -54,7 +62,7 @@ description: "Drives the daily co-building of the user's AI knowledge base at kn
    - **不管了**：`status: dropped`，处置记录里写原因。
    - **写到学习计划里**：把标题和一句话追加到 `learning-plan.md` 的「从回顾排入的课」，`status: promote`。之后不再出现在每日待回顾列表，轮到它时作为计划里的下一课。
    - **留在回顾里下次处理**：保持 `status: open`。用户指定了日期才改 `later` 并填写 `review_after`。
-3. **联网整理今天这一课**：不再另拉一轮 24 小时情报进 inbox。8:00 的任务已经放过。本步只为一件事检索一手源：计划里的下一课，加上用户点名的回顾项。用户明确说「再拉一次」，或确认 8:00 任务没有写入时，才补拉，新条目先放进待回顾，不自动并进今天。
+3. **联网整理今天这一课**：不再另拉一轮 24 小时情报进 inbox。8:00 的任务已经放过。本步只为一件事检索一手源：计划里的下一课，加上用户点名的回顾项。若 8:00 任务某天未推送，保持当天空缺，不在后续日期补拉补写。
 4. **写入**：下一课按 `_templates/entry.md` 写入对应 `entries/<模块>/`，必须含「对我的意义 ★」。点名的回顾项核实后写入它挂靠的条目或模型档案，`status: merged`，`entry` 填路径。模型相关顺手更新 `registry/`。某一条点名项核实后发现撑不起今天这一页，停下来改问：改写入学习计划，还是留到下次。不把它写成第二课。
 5. **生成呈现物**：详见 `references/presentation.md`。
    - 写 `knowledge/ai/daily/YYYY-MM-DD.md`（模板 `_templates/daily.md`）：计划下一课的学习卡片、当天点名的回顾、3–5 题 quiz。运行 `python3 scripts/build_site.py ai`，生成 `site/daily/YYYY-MM-DD.html`（含可作答 quiz），并刷新首页归档和受影响的模块 Tab 页。
