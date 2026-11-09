@@ -1,6 +1,6 @@
 ---
 name: ai-kb-daily
-description: "Drives the daily co-building of the user's AI knowledge base at knowledge/ai/ (a MaaS TokenHub PM learning system). This skill should be used when the user says things like 开始今天的学习, 今天学什么, 拉一下最新AI资讯, 更新知识库, 做今天的学习材料/小红书/播客, 回顾 inbox, 这页没看懂, or when running the one-time full backfill of module tabs. It orchestrates reporting last progress, pulling the last 24h of industry updates online, advancing one 20-30 min learning unit, writing entries and model registry, generating the static HTML site with quiz plus Xiaohongshu draft and podcast script, answering follow-up questions on the daily page, reviewing the inbox, and updating the check-in log."
+description: "Drives the daily co-building of the user's AI knowledge base at knowledge/ai/ (a MaaS TokenHub PM learning system). This skill should be used when the user says things like 开始今天的学习, 今天学什么, 更新知识库, 做今天的学习材料/小红书/播客, 回顾 inbox, 这页没看懂, or when running the one-time full backfill of module tabs. It orchestrates reporting last progress, advancing one 20-30 min learning unit, writing entries and model registry, generating the static HTML site with quiz plus Xiaohongshu draft and podcast script, answering follow-up questions on the daily page, reviewing the inbox, and updating the check-in log."
 ---
 
 # AI 知识库每日共建 (ai-kb-daily)
@@ -10,6 +10,14 @@ description: "Drives the daily co-building of the user's AI knowledge base at kn
 驱动用户（MaaS TokenHub 产品经理）的 AI 知识库 `knowledge/ai/` 的**每日共建**与**首次全量填充**。
 把「联网拉取最新信息 → 学习一个知识点 → 沉淀入库 → 生成多端呈现物 → 打卡」这一整套动作固化为可复用流程。
 会话里说「开始今天的学习」跑完整流程。每天 8:00 的定时任务只把过去 24 小时的情报放进 `inbox/`。学习从回顾这个队列开始：用户点名今天要学的回顾项，再加上计划里的下一课，一起核实后生成每日页、小红书草稿和播客。
+
+## 8:00 定时任务硬规则（新增，优先级高于其他流程说明）
+
+1. 只写 `knowledge/ai/inbox/` 下 `status: open` 的新文件。
+2. 直接提交并推送到 `feature/beryl-build-knowledge-base`。
+3. 不新开分支，不新开拉取请求。
+4. 不写 `entries/`、`registry/`、`daily/`、`publish/`、`progress.md`、`learning-plan.md`。
+5. 某天若没有推进到推送就留空，不在下一天补拉或补写。
 
 ## 何时使用
 
@@ -30,7 +38,7 @@ description: "Drives the daily co-building of the user's AI knowledge base at kn
 
 ## 能力边界（必须对用户诚实声明，不得假装能做）
 
-1. **会话内不自己定时**：在对话里只有用户发起才跑完整学习。情报拉取另有一条已启用的定时任务，每天 8:00 只写入 `inbox/`。
+1. **会话内不自己定时**：在对话里只有用户发起才跑完整学习。情报拉取另有一条已启用的定时任务，每天 8:00 把新的 inbox 文件直接提交到 `feature/beryl-build-knowledge-base`，不新开拉取请求。
 2. **播客不自动出声、不代发小宇宙**：口播稿写入 `publish/podcast/` 后，用 `scripts/synthesize_podcast.py` 按 `kb.config.yaml` 的晓晓音色合成同名 m4a，构建进每日页播放器，由用户点播放。再把同一条音频预填进小宇宙主播后台草稿，不点发布。账号未完成主体认证时停下来，让用户自己认证，不代填证件。步骤见 `references/presentation.md`。
 3. **不代点发布**：小红书文案写入 `publish/xhs/` 后，在用户已登录的 Chrome 创作服务平台预填草稿。可见范围设为**仅自己可见**，只点「暂存离开」。草稿在该浏览器本地，不进 App。用户自己打开这篇草稿再发布。步骤见 `references/presentation.md`。
 4. **无法看视频/听音频**：视频/课程源优先抓取配套文字（讲义/字幕/博客/GitHub）；
@@ -40,6 +48,18 @@ description: "Drives the daily co-building of the user's AI knowledge base at kn
    - **知识库条目（entries/、registry/）= 完整、丰富、详尽**，是系统查阅的参考资料，按 `_templates/entry.md` 的完整结构写深写透。
    - **每日推送（HTML每日页/小红书/播客）= 精简**，从条目中提炼一小份供 20-30 分钟消化。
    - 即：条目求全，推送求精。
+
+## 8:00 定时任务
+
+这条任务只做一件事：把过去 24 小时、对过一手源的更新写成 `knowledge/ai/inbox/` 里 `status: open` 的文件，并直接提交、推送到 `feature/beryl-build-knowledge-base`。
+
+- 不新开分支，不新开拉取请求。
+- 不写 `entries/`、`registry/`、`daily/`、`publish/`、`progress.md` 或学习计划。
+- 不把这些条目标成今天学过。
+- 某一天没有推进到推送，就让那天空着。用户明确说补拉之前，不在下一天补写。
+- 2026-10-22 至 2026-11-08 已有产物的拉取请求 #3–#18 已关闭，不合并。那些 inbox 文件在当前分支里待回顾。2026-10-26、2026-10-30 与 2026-11-09 没有产物，不补拉。
+
+学习会话开始时，先看当前工作区的 `inbox/`。若 `origin/feature/beryl-build-knowledge-base` 上有更新的 inbox 而本地还没有，且工作区可以快进，先拉取再列待回顾。工作区有未提交改动时不要硬拉，先告诉用户哪些文件只在远端。
 
 ## 两种运行模式
 
@@ -54,14 +74,14 @@ description: "Drives the daily co-building of the user's AI knowledge base at kn
    - **不管了**：`status: dropped`，处置记录里写原因。
    - **写到学习计划里**：把标题和一句话追加到 `learning-plan.md` 的「从回顾排入的课」，`status: promote`。之后不再出现在每日待回顾列表，轮到它时作为计划里的下一课。
    - **留在回顾里下次处理**：保持 `status: open`。用户指定了日期才改 `later` 并填写 `review_after`。
-3. **联网整理今天这一课**：不再另拉一轮 24 小时情报进 inbox。8:00 的任务已经放过。本步只为一件事检索一手源：计划里的下一课，加上用户点名的回顾项。用户明确说「再拉一次」，或确认 8:00 任务没有写入时，才补拉，新条目先放进待回顾，不自动并进今天。
+3. **联网整理今天这一课**：不再另拉一轮 24 小时情报进 inbox。8:00 的任务已经放过。本步只为一件事检索一手源：计划里的下一课，加上用户点名的回顾项。若 8:00 任务某天未推送，保持当天空缺，不在后续日期补拉补写。
 4. **写入**：下一课按 `_templates/entry.md` 写入对应 `entries/<模块>/`，必须含「对我的意义 ★」。点名的回顾项核实后写入它挂靠的条目或模型档案，`status: merged`，`entry` 填路径。模型相关顺手更新 `registry/`。某一条点名项核实后发现撑不起今天这一页，停下来改问：改写入学习计划，还是留到下次。不把它写成第二课。
 5. **生成呈现物**：详见 `references/presentation.md`。
-   - 写 `knowledge/ai/daily/YYYY-MM-DD.md`（模板 `_templates/daily.md`）：计划下一课的学习卡片、当天点名的回顾、3–5 题 quiz。运行 `python3 scripts/build_site.py ai`，生成 `site/daily/YYYY-MM-DD.html`（含可作答 quiz），并刷新首页归档和受影响的模块 Tab 页。
+   - 写 `knowledge/ai/daily/YYYY-MM-DD.md`（模板 `_templates/daily.md`）：计划下一课的学习卡片、当天点名的回顾、3–5 题 quiz。运行 `python3 scripts/build_site.py ai`，把全部正式每日页累积进 `site/daily/index.html`（日历切换日期，含可作答 quiz），并刷新首页归档和受影响的模块 Tab 页。
    - 小红书：文案与配图写入 `publish/xhs/YYYY-MM-DD.md`（图片同目录）后，按 `references/presentation.md` 预填进创作服务平台草稿。可见范围为仅自己可见，暂存离开，不点发布。
    - 播客：口播稿写入 `publish/podcast/YYYY-MM-DD.md` 后，运行 `python3 scripts/synthesize_podcast.py` 合成同名 m4a，再构建进每日页播放器。小宇宙按 `references/presentation.md` 预填草稿；未认证或节目标题超过 20 字时停下来问用户，不点发布。
    - `kind: sample` 只验证版式，不写入 `progress.md`。
-6. **收尾打卡**：更新 `progress.md`（日期 / 是否学习 / 主轨写计划下一课 / 副轨写当天点名的回顾标题）。如实记录，不虚记。把每日页地址给用户，并停下来等追问。不要把会话收成已经结束。
+6. **收尾打卡**：更新 `progress.md`（日期 / 是否学习 / 主轨写计划下一课 / 副轨写当天点名的回顾标题）。如实记录，不虚记。把每日页地址给用户：`knowledge/ai/site/daily/index.html#YYYY-MM-DD`。不要再给一天一份的 HTML。然后停下来等追问。不要把会话收成已经结束。
 7. **追问（看完每日页之后，同一次对话）**：用户可以接着问。先回答，再决定要不要落盘。
    - **这页或这条目没讲清**：先按当天条目回答。条目不够，就打开一手源核实，把补充写回该条目。若补充改变了当天卡片的结论，同步改 `daily/当天.md` 并重建站点，在 `progress.md` 当天那一行补一句。这种追问不进 inbox。
    - **值得以后单独一课**：按 `_templates/inbox.md` 记一条，`from: followup`，并写入「从回顾排入的课」，`status: promote`。当天不展开成第二课。

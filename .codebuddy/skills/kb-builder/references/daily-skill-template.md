@@ -46,7 +46,7 @@
 ## references/presentation.md 必备内容
 
 - **数据流图**：唯一数据源 `knowledge/<domain>/*.md` → 构建脚本 → HTML/quiz/小红书/播客。
-- **静态站点结构**：`site/` 下 index / daily/YYYY-MM-DD / modules/ / assets/。
+- **静态站点结构**：`site/` 下 index / daily/index.html（正式每日页按日期累积在这一份里，用日历切换，地址带 `#YYYY-MM-DD`）/ modules/ / assets/。样例页不进日历。
 - **quiz**：基于当天内容出 3-5 题，内嵌当日页，纯前端交互。
 - **小红书**：`publish/xhs/YYYY-MM-DD.md`（标题/正文/标签 + 配图或封面主文案）。预填进创作服务平台草稿，可见范围仅自己可见，暂存离开；用户自己发布。
 - **播客**：`publish/podcast/YYYY-MM-DD.md`（口播全文 + 分段标记）与同名音频。音色和合成命令写在该库呈现规范与 `kb.config.yaml`，每日页放播放器，用户点播放；平台草稿不代发布。平台要求主体认证时停下来，让用户自己完成。

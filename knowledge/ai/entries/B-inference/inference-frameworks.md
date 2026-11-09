@@ -16,8 +16,16 @@ sources:
     url: https://nvidia.github.io/TensorRT-LLM/
     tier: 一手
     verified: 2026-08-31
+  - name: DeepInfer README 与部署问答
+    url: https://github.com/deepseek-ai/DeepInfer
+    tier: 一手
+    verified: 2026-10-22
+  - name: LMSYS《Announcing the SGLang AWS Trainium Plugin Beta》
+    url: https://www.lmsys.org/blog/2026-10-22-sglang-trainium-beta/
+    tier: 一手
+    verified: 2026-11-05
 created: 2026-08-31
-updated: 2026-09-01
+updated: 2026-11-05
 status: 已消化
 ---
 
@@ -87,12 +95,28 @@ flowchart TD
 - **误区二**：只看单一 benchmark 数字选型。性能随模型、batch、序列长度、硬件、版本剧烈变化，须以自己的目标负载实测为准。
 - **注意**：三者能力在快速趋同（都在补前缀缓存、投机解码、PD 分离等），选型时更要看生态、硬件匹配和运维成本。
 
+### DeepInfer（2026-10-22 核实）
+
+[DeepInfer README](https://github.com/deepseek-ai/DeepInfer) 把这次开源写成 DeepSeek 大规模线上服务用的推理框架，许可证是 Apache 2.0。当前支持的模型是 **DeepSeek-V4.1-Flash**。硬件写的是 NVIDIA SM100 和华为昇腾 950。README 写明这次给的是离线推理和一批核心能力，**完整在线服务还缺三块，没有放出来**：KV cache 系统、视觉编码 / Prefill / Decode 分离（引擎里大部分相关功能已经实现）、以及 Prefill 和 Decode 两侧数据并行副本的负载均衡。
+
+同仓库的 [部署问答](https://github.com/deepseek-ai/DeepInfer/blob/main/doc/inference_deployment_qa.md) 是 DeepSeek 自己的口径，不是第三方审计。里面写：单个集群每天服务 **155 万亿 token**，谷值定价下整体收入 **每 GPU 小时 38 美元**；设计目标包括多厂商加速卡、Prefill 用普通 8 卡机器、Decode 用 64–128 卡超节点，以及把 KV cache 保留 **超过 72 小时**。问答还写，实践里最小的高效部署单元大约是 **64 卡 Prefill 加 64 卡 Decode**。同批开源的 **deepseek-recipe** 负责 API 协议和 token 序列的转换，官方称处理逻辑与 DeepSeek API 对齐。
+
+这和「把 DeepSeek 的线上引擎整套搬进现有服务」不是一回事。能拿来的是离线推理和已开源的引擎能力。KV cache 怎么管、请求怎么在副本之间均衡，官方写明还绑在他们自己的基础设施上。
+
+### SGLang 上 AWS Trainium（2026-11-05 核实）
+
+[LMSYS 2026-10-22 的博文](https://www.lmsys.org/blog/2026-10-22-sglang-trainium-beta/)宣布 SGLang 的 AWS Trainium 插件进入 beta，建在 AWS 的 PyTorch 后端 TorchNeuron 上。beta 覆盖 Trainium2 和 Trainium3 的两类负载：LLM 推理服务，以及后训练时的 RL rollout。
+
+首批模型是 Qwen3 稠密、Qwen3-MoE-30B-A3B、DeepSeek-V2-Lite、GLM-4，以及 GLM-5.2 / 5.3。写出的特性是数据并行、张量并行、专家并行、Radix Cache、BF16 / FP8 和异步调度。文中的异构 RL 例子是：SGLang 在 Trainium3 上为 Qwen3-MoE-30B-A3B 生成 rollout，Miles 用 Megatron 在单台 H200 上训练 GRPO 策略。博文没有给吞吐或单价。beta 目前只对少量团队开放，需要申请。更广的可用时间写成今年稍后。
+
 ## 对我的意义 ★
 
 - 推理引擎"决定吞吐、延迟、显存利用率、硬件兼容性"——**同一模型换引擎，成本和性能可能差很多**。这是自建推理服务最关键的技术选型之一，直接影响每 token 成本。
+- 评估 DeepSeek 自建时，先问开源包里有没有 KV cache 和负载均衡。2026-10-22 的官方 README 写明这两块还没完整开源。155 万亿 token / 天和每 GPU 小时 38 美元是他们自己的线上口径，不能当成我方能复现的收益。
 - 三者定位清晰：通用/快速起步→vLLM；生产级大规模/Agent→SGLang；NVIDIA 卡极致性能→TensorRT-LLM。理解它们，能让我在和技术团队讨论选型时有判断力，也能评估供应商用的方案及其成本竞争力。
 - **TensorRT-LLM 转向 PyTorch 后端**是重要信号（灵活性 vs 极致性能的路线调整），选型认知需持续更新。
 - SGLang 由 LMSYS（LMArena 运营方）主导，值得关注——它同时连接着"推理引擎"和"权威评测"两个我们关心的领域。
+- 2026-10-22 的 Trainium beta 把 rollout 和训练拆到不同硬件上：Trainium3 生成，单台 H200 训练。吞吐和相对 GPU 的价差这篇没有给，不能写进成本模型。要看的是 SGLang 的接口能不能让同一套服务在 GPU 和 Trainium 之间搬。
 
 ## 原文与参考
 

@@ -4,9 +4,9 @@ captured: 2026-10-21
 from: followup
 module: B-inference
 business: true
-status: open
+status: merged
 review_after:
-entry:
+entry: entries/B-inference/inference-frameworks.md
 sources:
   - name: DeepInfer 仓库
     url: https://github.com/deepseek-ai/DeepInfer
@@ -40,3 +40,4 @@ sources:
 ## 处置记录
 
 - 2026-10-21：按用户要求新建，`status: open`，等待 inbox 回顾。
+- 2026-10-22：用户点名和当天的 KV Cache 一课一起学。已写入 `entries/B-inference/inference-frameworks.md`。status=merged。
