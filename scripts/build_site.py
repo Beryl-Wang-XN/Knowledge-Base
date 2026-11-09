@@ -11,7 +11,7 @@ framework.md 等），生成纯静态 HTML 站点到 knowledge/<domain>/site/。
 
 特性：
 - 每个条目生成独立详情页（modules/<模块>/<slug>.html），模块页为条目列表，避免长页面。
-- 读取 daily/*.md，生成每日学习页（daily/<slug>.html），内嵌 quiz；首页列出归档。
+- 读取 daily/*.md，累积进一份每日页（daily/index.html），用日历切换日期；首页列出归档。
 - 支持 mermaid 图表（```mermaid 代码块自动渲染）。
 - 出处超链接由 Markdown 原生支持。
 设计：数据源唯一（Markdown），站点为构建产物；改内容改 Markdown，重跑本脚本即可。
@@ -20,6 +20,7 @@ framework.md 等），生成纯静态 HTML 站点到 knowledge/<domain>/site/。
 from __future__ import annotations
 
 import html as html_lib
+import json
 import re
 import shutil
 import sys
@@ -149,6 +150,23 @@ color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-size:
 .quiz-result.ok{color:var(--ok)}
 .quiz-result.bad{color:#ff8b8b}
 .quiz-explain{color:var(--muted);margin-top:6px}
+.day-picker{position:relative;margin:0 0 8px}
+.cal-btn{font:inherit;font-size:15px;line-height:1.2;color:var(--ok);background:transparent;
+border:1.5px solid var(--ok);border-radius:999px;padding:7px 18px;cursor:pointer}
+.cal-btn:hover{background:rgba(62,207,142,.12)}
+.cal-pop{position:absolute;z-index:20;top:calc(100% + 8px);left:0;width:292px;
+background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 12px 14px;
+box-shadow:0 12px 32px rgba(0,0,0,.35)}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:#fff}
+.cal-head button{background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:8px;
+width:28px;height:28px;cursor:pointer}
+.cal-week,.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-week{color:var(--muted);font-size:12px;margin-bottom:4px}
+.cal-day{height:32px;border:0;border-radius:999px;background:transparent;color:#3d4b66;font:inherit;font-size:13px}
+.cal-day:disabled{opacity:1;cursor:default}
+.cal-day.has{color:var(--ok);border:1px solid var(--ok);cursor:pointer}
+.cal-day.on{background:var(--ok);color:#06281a;border-color:var(--ok)}
+.day[hidden]{display:none}
 footer{max-width:1080px;margin:0 auto;padding:24px 20px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
 """
 
@@ -183,6 +201,98 @@ document.querySelectorAll(".quiz").forEach(function (card) {
     });
   });
 });
+</script>"""
+
+DAILY_JS = """<script>
+(function () {
+  var data = document.getElementById("daily-dates");
+  var btn = document.getElementById("cal-btn");
+  var pop = document.getElementById("cal-pop");
+  if (!data || !btn || !pop) return;
+  var dates = JSON.parse(data.textContent);
+  var has = {};
+  dates.forEach(function (d) { has[d] = true; });
+  var view = null;
+
+  function parse(iso) {
+    var p = iso.split("-");
+    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  }
+  function isoOf(date) {
+    var m = date.getMonth() + 1;
+    var d = date.getDate();
+    return date.getFullYear() + "-" + (m < 10 ? "0" : "") + m + "-" + (d < 10 ? "0" : "") + d;
+  }
+  function show(iso) {
+    if (!has[iso]) return;
+    document.querySelectorAll(".day").forEach(function (el) {
+      var on = el.getAttribute("data-date") === iso;
+      el.hidden = !on;
+      if (!on) el.querySelectorAll("audio").forEach(function (a) { a.pause(); });
+    });
+    btn.textContent = iso;
+    if (location.hash !== "#" + iso) history.replaceState(null, "", "#" + iso);
+    render(parse(iso));
+  }
+  function render(anchor) {
+    view = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+    pop.querySelector("[data-cal=label]").textContent = view.getFullYear() + "年" + (view.getMonth() + 1) + "月";
+    var grid = pop.querySelector("[data-cal=grid]");
+    grid.innerHTML = "";
+    var start = (view.getDay() + 6) % 7;
+    var n = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+    var selected = (location.hash || "").replace("#", "");
+    for (var i = 0; i < start; i++) grid.appendChild(document.createElement("span"));
+    for (var day = 1; day <= n; day++) {
+      var cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "cal-day";
+      cell.textContent = String(day);
+      var iso = isoOf(new Date(view.getFullYear(), view.getMonth(), day));
+      if (has[iso]) {
+        cell.classList.add("has");
+        if (iso === selected) cell.classList.add("on");
+        cell.addEventListener("click", function (picked) {
+          return function () {
+            show(picked);
+            pop.hidden = true;
+            btn.setAttribute("aria-expanded", "false");
+          };
+        }(iso));
+      } else {
+        cell.disabled = true;
+      }
+      grid.appendChild(cell);
+    }
+  }
+  btn.addEventListener("click", function () {
+    var open = pop.hidden;
+    pop.hidden = !open;
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) {
+      var selected = (location.hash || "").replace("#", "");
+      render(parse(has[selected] ? selected : dates[dates.length - 1]));
+    }
+  });
+  pop.querySelector("[data-cal=prev]").addEventListener("click", function () {
+    render(new Date(view.getFullYear(), view.getMonth() - 1, 1));
+  });
+  pop.querySelector("[data-cal=next]").addEventListener("click", function () {
+    render(new Date(view.getFullYear(), view.getMonth() + 1, 1));
+  });
+  document.addEventListener("click", function (ev) {
+    if (!pop.hidden && !pop.contains(ev.target) && ev.target !== btn) {
+      pop.hidden = true;
+      btn.setAttribute("aria-expanded", "false");
+    }
+  });
+  window.addEventListener("hashchange", function () {
+    var selected = (location.hash || "").replace("#", "");
+    if (has[selected]) show(selected);
+  });
+  var initial = (location.hash || "").replace("#", "");
+  show(has[initial] ? initial : dates[dates.length - 1]);
+})();
 </script>"""
 
 
@@ -238,13 +348,14 @@ def parse_quiz(text: str) -> list:
     return items
 
 
-def render_quiz(items: list) -> str:
+def render_quiz(items: list, name_prefix: str = "") -> str:
     blocks = []
     for i, item in enumerate(items):
         opts = ""
+        group = f"{name_prefix}q{i}" if name_prefix else f"q{i}"
         for j, label in enumerate(item["options"]):
             opts += (
-                f'<label class="opt"><input type="radio" name="q{i}" value="{j}">'
+                f'<label class="opt"><input type="radio" name="{group}" value="{j}">'
                 f"<span>{html_lib.escape(label)}</span></label>"
             )
         blocks.append(
@@ -293,7 +404,7 @@ def load_dailies(root: Path) -> list:
     return items
 
 
-def page(title: str, active: str, content: str, nav_items, need_mermaid=False, need_quiz=False) -> str:
+def page(title: str, active: str, content: str, nav_items, need_mermaid=False, need_quiz=False, extra_js: str = "") -> str:
     nav = '<span class="brand">📚 AI 知识库</span>'
     for href, label, key in nav_items:
         cls = " active" if key == active else ""
@@ -303,6 +414,7 @@ def page(title: str, active: str, content: str, nav_items, need_mermaid=False, n
         extra += MERMAID_JS
     if need_quiz:
         extra += QUIZ_JS
+    extra += extra_js
     return f"""<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -324,8 +436,7 @@ def build(domain: str = "ai"):
     dailies = load_dailies(root)
     real_daily = [item for item in dailies if not is_sample_daily(item["meta"])]
     real_daily.sort(key=lambda item: str(item["meta"].get("date") or item["path"].stem), reverse=True)
-    nav_daily = (real_daily or dailies)
-    nav_daily_href = f"daily/{nav_daily[0]['path'].stem}.html" if nav_daily else None
+    nav_daily_href = "daily/index.html" if real_daily else None
 
     nav = [("index.html", "首页", "home")]
     if nav_daily_href:
@@ -418,27 +529,30 @@ def build(domain: str = "ai"):
     (site / "framework.html").write_text(
         page("认知框架 · AI 知识库", "framework", fw_content, nav_for(0), need_mm_fw), encoding="utf-8")
 
-    # 每日学习页（数据源：daily/*.md；kind: sample 不计入打卡）
+    # 每日学习页：正式每日 Markdown 累积进一份 HTML，用日历切换。样例不进入这份页面。
     archive_real = ""
     archive_sample = ""
-    if dailies:
+    day_blocks = []
+    day_dates = []
+    need_quiz = False
+    need_mermaid = False
+    if real_daily:
         (site / "daily").mkdir(exist_ok=True)
-    for item in real_daily + [d for d in dailies if is_sample_daily(d["meta"])]:
+    for item in real_daily:
         meta = item["meta"]
         sections = item["sections"]
         stem = item["path"].stem
+        day = str(meta.get("date") or stem)
         title = str(meta.get("title") or stem)
         card_md = sections.get("今日学习卡片", "")
         intel_md = sections.get("今天的回顾") or sections.get("副轨情报", "")
         quiz_items = parse_quiz(sections.get("Quiz", ""))
         card_html = md2html(card_md) if card_md else "<p>今天没有学习卡片。</p>"
         intel_html = md2html(intel_md) if intel_md else "<p>今天没有点名回顾项。</p>"
-        quiz_html = render_quiz(quiz_items) if quiz_items else '<div class="note">今天没有 quiz。</div>'
-        sample = is_sample_daily(meta)
-        if sample:
-            badge = '<span class="badge">样例 · 不计入打卡</span>'
-        else:
-            badge = f'<span class="badge v">{html_lib.escape(str(meta.get("date") or stem))}</span>'
+        quiz_prefix = "d" + re.sub(r"[^0-9A-Za-z]", "", day) + "-"
+        quiz_html = render_quiz(quiz_items, quiz_prefix) if quiz_items else '<div class="note">今天没有 quiz。</div>'
+        need_quiz = need_quiz or bool(quiz_items)
+        need_mermaid = need_mermaid or "mermaid" in card_html
         entry = str(meta.get("entry") or "")
         entry_link = ""
         if entry.startswith("entries/") and entry.endswith(".md"):
@@ -471,31 +585,51 @@ def build(domain: str = "ai"):
             '<div class="note">同日文稿不进静态页，供手动使用：' + " · ".join(pubs) + "</div>"
             if pubs else ""
         )
-        content = f"""<h1>{html_lib.escape(title)}</h1>
-<p class="sub">{badge}</p>
-{entry_link}
-{player_html}
-{publish_note}
-<h2>今日学习卡片</h2>
-<article>{card_html}</article>
-<h2>今天的回顾</h2>
-<article>{intel_html}</article>
-<h2>Quiz</h2>
-{quiz_html}"""
-        (site / "daily" / f"{stem}.html").write_text(
-            page(f"{title} · 每日学习", "daily", content, nav_for(1),
-                 need_mermaid="mermaid" in card_html, need_quiz=bool(quiz_items)),
-            encoding="utf-8")
+        day_blocks.append(
+            f'<section class="day" data-date="{html_lib.escape(day)}"{" hidden" if day_blocks else ""}>'
+            f"<h1>{html_lib.escape(title)}</h1>"
+            f"{entry_link}{player_html}{publish_note}"
+            f"<h2>今日学习卡片</h2><article>{card_html}</article>"
+            f"<h2>今天的回顾</h2><article>{intel_html}</article>"
+            f"<h2>Quiz</h2>{quiz_html}</section>"
+        )
+        day_dates.append(day)
         summary = html_lib.escape(first_paragraph(card_md) or "打开查看")
-        when = "样例" if sample else html_lib.escape(str(meta.get("date") or stem))
-        card = (
-            f'<a class="list-card" href="daily/{stem}.html"><div class="t">{html_lib.escape(title)}</div>'
+        when = html_lib.escape(day)
+        archive_real += (
+            f'<a class="list-card" href="daily/index.html#{when}"><div class="t">{html_lib.escape(title)}</div>'
             f'<div class="d">{summary}…</div><div class="tags">{when}</div></a>'
         )
-        if sample:
-            archive_sample += card
-        else:
-            archive_real += card
+    if day_blocks:
+        # 日历按时间从早到晚；打开页面时没有指定日期就显示最近一天。
+        ordered = sorted(day_dates)
+        picker = (
+            '<div class="day-picker">'
+            f'<button type="button" class="cal-btn" id="cal-btn" aria-haspopup="dialog" aria-expanded="false">{html_lib.escape(ordered[-1])}</button>'
+            '<div class="cal-pop" id="cal-pop" hidden>'
+            '<div class="cal-head"><button type="button" data-cal="prev" aria-label="上个月">‹</button>'
+            '<span data-cal="label"></span>'
+            '<button type="button" data-cal="next" aria-label="下个月">›</button></div>'
+            '<div class="cal-week"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>'
+            '<div class="cal-grid" data-cal="grid"></div></div></div>'
+            f'<script type="application/json" id="daily-dates">{json.dumps(ordered, ensure_ascii=False)}</script>'
+        )
+        daily_nav = []
+        for href, label, key in nav:
+            if key == "daily":
+                daily_nav.append(("index.html", label, key))
+            else:
+                daily_nav.append(("../" + href, label, key))
+        (site / "daily" / "index.html").write_text(
+            page("每日学习 · AI 知识库", "daily", picker + "\n".join(day_blocks), daily_nav,
+                 need_mermaid=need_mermaid, need_quiz=need_quiz, extra_js=DAILY_JS),
+            encoding="utf-8",
+        )
+        for old in (site / "daily").glob("*.html"):
+            if old.name != "index.html":
+                old.unlink()
+    if any(is_sample_daily(item["meta"]) for item in dailies):
+        archive_sample = '<div class="note">版式样例 <code>daily/_sample.md</code> 不进入每日日历。</div>'
 
     # 首页
     mod_cards = ""

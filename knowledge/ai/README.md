@@ -24,4 +24,4 @@ python3 scripts/synthesize_podcast.py knowledge/ai/publish/podcast/某日.md
 python3 scripts/validate.py ai
 ```
 
-`python scripts/update_kb.py ai` 是全仓库共用的更新入口。它只抓本库 `kb.config.yaml` 里启用的来源。当前没有启用的来源，所以它不会写出 A–G 条目、每日页或 inbox。每天 08:00 的定时任务单独把情报写入 `inbox/`。
+`python scripts/update_kb.py ai` 是全仓库共用的更新入口。它只抓本库 `kb.config.yaml` 里启用的来源。当前没有启用的来源，所以它不会写出 A–G 条目、每日页或 inbox。每天 08:00 的定时任务单独把情报直接提交到 `feature/beryl-build-knowledge-base` 的 `inbox/`，不新开拉取请求。

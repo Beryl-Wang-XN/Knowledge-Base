@@ -12,7 +12,7 @@ entries/ + registry/          daily/YYYY-MM-DD.md           手写文稿
             └──────── scripts/build_site.py ──────────────────┘
                      （小红书文稿不进站点；播客有同名音频时嵌入每日页播放器）
                               │
-                    site/index.html + site/daily/*.html（内嵌 quiz）
+                    site/index.html + site/daily/index.html（全部正式每日页累积在一份里，日历切换）
                     + site/modules/*（条目详情）
 ```
 
@@ -28,7 +28,7 @@ entries/ + registry/          daily/YYYY-MM-DD.md           手写文稿
 knowledge/ai/daily/YYYY-MM-DD.md    # 每日页数据源（样例为 daily/_sample.md）
 knowledge/ai/site/                  # 构建产物，gitignore，勿手改
 ├── index.html               # 首页：每日归档 + 模块入口
-├── daily/YYYY-MM-DD.html     # 每日学习页（可累计、可翻历史），内嵌当天 quiz
+├── daily/index.html          # 唯一每日页：按日期累积，日历选日，内嵌当天 quiz
 └── modules/                  # 模块 Tab 页 + 各条目详情；registry.html 为模型库
 ```
 
@@ -36,12 +36,12 @@ knowledge/ai/site/                  # 构建产物，gitignore，勿手改
 
 - **每日页**：呈现计划里的下一课（含「对我的意义」）+ 当天点名的回顾 + quiz。
 - **模块 Tab 页**：聚合该模块 `entries/` 下所有条目；G 页渲染 `registry/index.md` 对比表 + 各档案。
-- **历史归档**：`index.html` 列出所有 `daily/` 页，可回翻。
+- **历史归档**：`index.html` 列出所有正式每日页，点进去落到 `daily/index.html#YYYY-MM-DD`。日期按钮打开日历，只有写过每日页的日期可以选。
 
 ## 二、Quiz
 
 - 写在当日 `daily/*.md` 的 `## Quiz` 下，3–5 题。每题一个 `###` 序号，选项 `- [ ]`，唯一正确答案 `- [x]`，解析用一段引用 `>`。判断题同样写成两个选项。
-- `scripts/build_site.py` 把它嵌进当日 HTML。点「看答案」后标出对错并显示解析。
+- `scripts/build_site.py` 把它嵌进 `daily/index.html` 里当天那一段。各天的选项分组互不干扰。点「看答案」后标出对错并显示解析。
 - 题和解析只使用当天条目里已核实的内容。
 
 ## 三、小红书

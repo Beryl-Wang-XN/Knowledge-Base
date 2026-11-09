@@ -16,8 +16,12 @@ sources:
     url: https://openrouter.ai/models
     tier: 工具站
     verified: 2026-08-31
+  - name: OpenAI《Build more responsive apps with the Decisions API》
+    url: https://openai.com/index/decisions-api/
+    tier: 一手
+    verified: 2026-11-05
 created: 2026-08-31
-updated: 2026-10-21
+updated: 2026-11-05
 status: 已消化
 ---
 
@@ -158,6 +162,22 @@ OpenRouter 聚合多家供应商对同一模型的报价，是验证"官方牌�
 
 **结论**：两家默认档是缓存读取约为 input 的 10%、5 分钟写入约为 125%、Batch 5 折、Fast 2 倍。Anthropic 另有 1 小时写入（2 倍）和少数型号更深的读取折扣。对标时按型号和缓存时长取系数。
 
+### Decisions API（2026-11-05 核实）
+
+[OpenAI 2026-10-22 的公告](https://openai.com/index/decisions-api/)说 Decisions API 已经一般可用。它基于 **GPT-6 Luna**，用来回答有界问题：分类、路由，或决定智能体的下一步。输入可以是文本、图片或原生 JSON。单次请求最多 400 个问题。推理驻留写的是美国和欧洲。符合条件的客户可以用 Zero Data Retention。公告还写亚洲若干区域增加了容量，这不是把推理驻留扩到亚洲。
+
+返回三种结果：
+
+| 类型 | 做什么 | 主结果 |
+|------|--------|--------|
+| predicate | 估计一个条件为真的概率 | 0 到 1 的概率 |
+| choice | 从给定选项里选一个 | 选中的值，另附概率和置信度 |
+| score | 按有序等级打分 | 等级下标的概率加权平均 |
+
+公告写明的价格：每百万 input token **$0.10**，缓存 input 每百万 **$0.01**。不收取 output token 费用。30 分钟和 12 小时缓存写入的价格，公告指向定价指南，这次没有打开该页，没有准确数据。
+
+「比同一模型走 Responses API 最多快约 10 倍」是 OpenAI 的产品口径。Box、Datadog、Ramp、Sierra、Speak 在同一页上的加速和降价数字，是这些客户自己的评测，不是我方测量。这组价格也不替换档案里已经核实的 GPT-5.6 Sol 直连牌价。
+
 ## 常见误区 / 注意点
 
 - **误区一：只比 input 单价。**客户实际账单由 input×输入量 + output×输出量 决定，而 output 单价是 input 的 5~6 倍。对"长输出"型场景（写作、代码生成），output 才是账单主体，只比 input 单价会严重误判成本。
@@ -171,6 +191,7 @@ OpenRouter 聚合多家供应商对同一模型的报价，是验证"官方牌�
 - **计费机制即定价抓手。**"缓存 10%/125%、Batch 5 折、Fast 2 倍"已是行业事实标准——我方定价可以此为锚，在缓存折扣力度、Batch 承诺时效、加速档溢价上做差异化竞争。
 - **成本传导要打通。**每一档折扣/加价背后都是真实成本差异（Prefill vs Decode、填谷 vs 占档、缓存命中省 KV 重算）。把 B 模块的技术机制映射到计费档位，才能既不亏本又有竞争力，这正是 [unit-economics](unit-economics.md) 成本模型要回答的。
 - **对账与客户信任。**向客户解释账单、提供成本估算器、设计套餐（如"高缓存命中场景专属折扣"），都依赖对 token 计费的精确掌握。
+- Decisions API 把一类有界决定收成只计 input。2026-10-22 公告的牌价是 $0.10 / $0.01 每百万 input token，output 不加 token 费。它挂在 GPT-6 Luna 上，不能拿来改 GPT-5.6 的 $4 / $20。30 分钟和 12 小时缓存写入没有准确数据。
 
 ## 原文与参考
 

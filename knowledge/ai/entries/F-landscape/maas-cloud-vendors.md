@@ -24,8 +24,12 @@ sources:
     url: https://openrouter.ai/
     tier: 一手
     verified: 2026-08-31
+  - name: OpenAI《OpenAI models are coming to Google Cloud》
+    url: https://openai.com/index/openai-models-google-cloud/
+    tier: 一手
+    verified: 2026-10-22
 created: 2026-08-31
-updated: 2026-08-31
+updated: 2026-10-22
 status: 已消化
 ---
 
@@ -215,6 +219,7 @@ Bedrock 强调身份、Policy、Guardrails、Observability 与合规；百炼强
 4. **建立供应商成本账本。** 分开记录公开单价、缓存价、批量价、专享包、渠道费用和失败重试成本；OpenRouter 首页未确认零加价，不能把模型官方价直接当平台采购价。
 5. **建设可审计的回退机制。** 每次请求记录期望模型、实际模型、实际 Provider、回退原因、成本变化和质量风险，才能把多供应商能力转化为可售 SLA。
 6. **国内云竞品重点看全链路捆绑。** 方舟和百炼都从模型 API 向 Agent、知识库和定制部署延伸；TokenHub 应决定哪些能力自建、哪些通过标准协议集成，避免在非核心层全面铺开。
+7. **多一个云渠道，不等于多一套牌价。** 2026-10-21 OpenAI 宣布前沿模型和 Codex 的智能体流程将进入 Google Cloud Model Garden，交易走 Marketplace，已有 GCP 承诺额度可以抵扣。正式上线写的是未来数周。公告没有写模型清单和价格。Microsoft 仍是 OpenAI 的主要云合作方。Google Cloud 自己的博客另列了 GPT-6 Astra、GPT-6.1 Sol、GPT-6 Luna，那是 Google 的页面，不覆盖本库已核实的 GPT-5.6 直连牌价。
 
 ## 原文与参考
 

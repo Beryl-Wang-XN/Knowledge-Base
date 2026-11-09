@@ -1,8 +1,8 @@
 # inbox
 
-8:00 的定时任务把过去 24 小时、且已对过一手源的情报放在这里（`status: open`）。看完每日页后、当天不展开的追问也放在这里。
+8:00 的定时任务把过去 24 小时、且已对过一手源的情报直接提交到 `feature/beryl-build-knowledge-base` 的这个目录（`status: open`）。看完每日页后、当天不展开的追问也放在这里。
 
-定时任务只允许改 `knowledge/ai/inbox/` 并直接推送到 `feature/beryl-build-knowledge-base`。不新开分支，不新开拉取请求，不写 entries、registry、daily、publish、progress 或学习计划。若某天未推送，当天留空，不在次日补写。
+定时任务只允许改 `knowledge/ai/inbox/`。不新开分支，不新开拉取请求，不写 entries、registry、daily、publish、progress 或学习计划。若某天未推送，当天留空，不在次日补写。
 
 每天学习从这份待回顾列表开始。待回顾 = `status` 为 `open`，或 `later` 且已到 `review_after`。已写入学习计划的 `promote` 不再每天重列。
 

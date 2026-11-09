@@ -100,6 +100,7 @@ flowchart LR
 - [x] GPT-5.6 Sol
 - [x] Claude Fable 5
 - [x] Gemini 3.1 Pro Preview
+- [x] Jev（TypeSafe，结构化决策，不是聊天旗舰；不进上面的旗舰价表）
 - [ ] Kimi（月之暗面）
 - [ ] 智谱 GLM
 - [ ] 字节豆包 Doubao

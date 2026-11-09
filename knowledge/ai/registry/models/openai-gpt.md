@@ -257,6 +257,7 @@ Artificial Analysis 对 **GPT-5.6 Sol（max）**的独立记录：
 
 | 日期 | 变更（价格/能力/版本） |
 |---|---|
-| 2026-10-21 | 再抓 OpenRouter 端点：`discount` 为 0，Flex/标准/Fast 与官方档位对齐，区域端点约 +10%。不再把 50% 写成当前事实。 |
+| 2026-11-05 | Decisions API 一般可用，基于 GPT-6 Luna。公告价是每百万 input token $0.10、缓存 input $0.01，不收 output token 费。不改本档案的 GPT-5.6 牌价。 |
+| 2026-10-22 | OpenAI 宣布前沿模型与 Codex 将进入 Google Cloud Model Garden，未来数周一般可用。公告无价格、无型号清单。不改本档案的 GPT-5.6 牌价。 |
 | 2026-08-31 | 补抓官方 Pricing，核实 Standard/Batch/Flex/Fast 与长上下文缓存价；补充 OpenRouter 端点和当时的促销渠道价。 |
 | 2026-08-31 | 以官方模型页重写为 GPT-5.6 Sol；核实 1.05M/128K、$4/$0.4/$20、272K 长上下文溢价和 AA 评测。 |
