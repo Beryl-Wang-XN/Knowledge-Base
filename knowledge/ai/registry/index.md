@@ -101,7 +101,7 @@ flowchart LR
 - [x] Claude Fable 5
 - [x] Gemini 3.1 Pro Preview
 - [x] Jev（TypeSafe，结构化决策，不是聊天旗舰；不进上面的旗舰价表）
-- [ ] Kimi（月之暗面）
+- [x] Kimi K3.1 Pro（月之暗面；人民币牌价见档案，不进上面的旗舰价表）
 - [ ] 智谱 GLM
 - [ ] 字节豆包 Doubao
 - [ ] 其他上架/对标模型

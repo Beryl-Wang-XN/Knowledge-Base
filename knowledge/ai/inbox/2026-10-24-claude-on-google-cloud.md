@@ -4,9 +4,9 @@ captured: 2026-10-24
 from: intel
 module: F-landscape
 business: true
-status: open
+status: merged
 review_after:
-entry:
+entry: entries/F-landscape/maas-cloud-vendors.md
 sources:
   - name: Google Cloud 博客
     url: https://cloud.google.com/blog/products/ai-machine-learning/expanding-claude-availability-on-google-cloud
@@ -34,3 +34,4 @@ Google Cloud 博客日期为 2026-10-23，宣布 Claude 在 Google Cloud 上的 
 ## 处置记录
 
 - 2026-10-24：新建，status=open。
+- 2026-11-09：并入 MaaS 与云厂商格局。Fast 模式的速度和加价仍没有准确数据。
