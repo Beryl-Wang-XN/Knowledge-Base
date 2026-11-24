@@ -4,9 +4,9 @@ captured: 2026-10-24
 from: intel
 module: F-landscape
 business: true
-status: open
+status: merged
 review_after:
-entry:
+entry: registry/models/anthropic-claude.md
 sources:
   - name: Claude：Enterprise 统一体验
     url: https://claude.com/resources/articles/unified-claude-enterprise
@@ -33,3 +33,4 @@ Anthropic 产品公告把这条标在 2026-10-23。对话和 Cowork 在 9 月先
 ## 处置记录
 
 - 2026-10-24：新建，status=open。
+- 2026-11-09：并入 Claude 档案的 Enterprise 统一体验。不改 Fable 5 牌价。

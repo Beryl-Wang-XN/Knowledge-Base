@@ -67,4 +67,5 @@
 
 每天的「下一课」先取这里的第一条。学完后从这里删掉，并把对应 inbox 标成 `merged`。这里为空时，回到上面四阶段里还没作为正式每日页学过的下一单元。
 
-- （还没有。你说「写到学习计划里」时，把那条的标题和一句话加在这里。）
+- **决策模型与生成式模型的结构差别。** Jev 和 Decisions API 为什么一次给出带类型的概率，而生成式模型要逐 token 写字符串。公开材料只写到并行采样、事先限定的答案空间，以及 Jev 的 RLCD；两边的网络结构都还没讲。对应 inbox `2026-11-09-decision-vs-generative.md`。
+- **vLLM、SGLang、TensorRT-LLM 分别做什么，以及和卡、模型、Agent、HuggingFace、后训练、强化学习框架的关系。** 查阅条目 `entries/B-inference/inference-frameworks.md` 已有选型对比，还没有作为每日课讲过。这课要讲清三套引擎处在哪一层，不把已有对比表再念一遍。对应 inbox `2026-11-09-inference-engines.md`。

@@ -20,8 +20,16 @@ sources:
     url: https://openai.com/index/decisions-api/
     tier: 一手
     verified: 2026-11-05
+  - name: OpenAI Decisions API 开发指南
+    url: https://developers.openai.com/api/docs/guides/decisions
+    tier: 一手
+    verified: 2026-11-09
+  - name: OpenRouter Decision Model Rankings
+    url: https://openrouter.ai/rankings/decisions
+    tier: 工具站
+    verified: 2026-11-09
 created: 2026-08-31
-updated: 2026-11-05
+updated: 2026-11-09
 status: 已消化
 ---
 
@@ -166,6 +174,8 @@ OpenRouter 聚合多家供应商对同一模型的报价，是验证"官方牌�
 
 [OpenAI 2026-10-22 的公告](https://openai.com/index/decisions-api/)说 Decisions API 已经一般可用。它基于 **GPT-6 Luna**，用来回答有界问题：分类、路由，或决定智能体的下一步。输入可以是文本、图片或原生 JSON。单次请求最多 400 个问题。推理驻留写的是美国和欧洲。符合条件的客户可以用 Zero Data Retention。公告还写亚洲若干区域增加了容量，这不是把推理驻留扩到亚洲。
 
+场景和 Jev 是同一类：工作流里答案范围事先写得死的判断。开发指南里的例子是一张客服单「请退还重复扣款」，旁边附上订单 JSON，两次扣款都是 49；问题是一个 predicate，问这是不是订单能对上的重复扣款。公告里的客户用法也是这类判断：Box 给保单分类并选择下一步，Datadog 在执行前给智能体生成的命令打风险分，Sierra 在实时对话里选下一个动作，Speak 缩短语言学习里「下一步」的等待。这些加速和降价是客户自己的评测。开放写作仍走 Responses API。
+
 返回三种结果：
 
 | 类型 | 做什么 | 主结果 |
@@ -177,6 +187,10 @@ OpenRouter 聚合多家供应商对同一模型的报价，是验证"官方牌�
 公告写明的价格：每百万 input token **$0.10**，缓存 input 每百万 **$0.01**。不收取 output token 费用。30 分钟和 12 小时缓存写入的价格，公告指向定价指南，这次没有打开该页，没有准确数据。
 
 「比同一模型走 Responses API 最多快约 10 倍」是 OpenAI 的产品口径。Box、Datadog、Ramp、Sierra、Speak 在同一页上的加速和降价数字，是这些客户自己的评测，不是我方测量。这组价格也不替换档案里已经核实的 GPT-5.6 Sol 直连牌价。
+
+调用由应用发起。开发者把问题和允许的答案写进请求，用户原文、图片或 JSON 作为 input，发到 `POST /v1/decisions`。终端用户不在 prompt 里写答案空间。GPT-Live 可以在会话的 triggers 里预先配好问题和选项，转写一更新就用这份配置打一次。官方指南把 Decisions 和 function calling 分开：后者是模型自己请求调用工具；Decisions 只返回概率、选项或分数，选中的动作由应用执行。
+
+OpenAI 没有公布 Decisions API 的全局请求数或 token 数。OpenRouter 决策榜截至 2026-11-08、统计周从 2026-11-02 起，GPT-6 Luna Decisions 为 3090 万次，占该周决策请求的 1.5%，比前一周少 38%。这只是经过 OpenRouter 的决策流量。
 
 ## 常见误区 / 注意点
 

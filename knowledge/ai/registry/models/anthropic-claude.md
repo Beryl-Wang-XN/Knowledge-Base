@@ -227,6 +227,7 @@ Artificial Analysis 页面记录的是 **Claude Fable 5（Adaptive Reasoning、M
 - [Claude Models Overview](https://platform.claude.com/docs/en/about-claude/models/overview)
 - [Claude API Pricing](https://platform.claude.com/docs/en/about-claude/pricing)
 - [Claude Plans & Pricing](https://claude.com/pricing)
+- [Claude Cowork and chat come together for Enterprise](https://claude.com/resources/articles/unified-claude-enterprise)（2026-10-23，2026-11-09 核实）
 - [Claude Fable](https://www.anthropic.com/claude/fable)
 - [OpenRouter：Claude Fable 5](https://openrouter.ai/anthropic/claude-fable-5)
 - [OpenRouter Endpoints API：Claude Fable 5](https://openrouter.ai/api/v1/models/anthropic/claude-fable-5/endpoints)
@@ -234,9 +235,20 @@ Artificial Analysis 页面记录的是 **Claude Fable 5（Adaptive Reasoning、M
 - [Arena Leaderboard](https://arena.ai/leaderboard)
 - [LiveBench](https://livebench.ai/)
 
+## Claude Enterprise 的统一体验（2026-11-09）
+
+2026-10-23，Anthropic 宣布 Chat 与 Cowork 合并后的同一套 Claude，对 Claude Enterprise 一般可用。Pro 和 Max 是 2026 年 9 月先合并的。网页、桌面和手机是同一个 Claude：简单问题仍当聊天回答；需要跑代码或处理文件时，工作转到 Anthropic 托管的云环境，关电脑后可以继续，完成后回到网页、桌面或手机。聊天、项目、连接器、skills 和插件会带过去。
+
+计费仍按用量。文章里的两句是厂商对「典型负载 / 大多数工作」的说法，不是新的 token 牌价，也不改本档案的 Fable 5 价格：按用量计，Claude Opus 5.5 比 Claude Opus 5 少 40%；Claude Sonnet 5.5 比 Claude Sonnet 5 至多少 30%。智能体任务可能比一次短聊天用掉更多 token。
+
+管理员有四项控制。新的 Efficient mode 把这套统一体验留在 Sonnet 和 Haiku 上。角色可以限制能用的模型。花费上限设在组织、群组和成员。群组还有一份共享的月度预算。
+
+安全写法来自同一篇文章：每次智能体任务在独立虚拟机里跑，Enterprise 默认关闭出网，连接器凭证放在沙箱外面。传输和静态加密仍在，默认不把数据用于训练。已经使用 Claude Code 零数据保留、HIPAA-ready 配置，或客户管理密钥的组织，留在原来的配置，不进这次统一体验。
+
 ## 变更记录
 
 | 日期 | 变更（价格/能力/版本） |
 |---|---|
 | 2026-08-31 | 补抓 Claude API Pricing，确认缓存、Batch、美国境内与无长上下文溢价；补充 OpenRouter 6 个多云端点。 |
 | 2026-08-31 | 以一手源重写为当前 Fable 5；核实 1M/128K、缓存/Batch 价格、30 天保留要求及 AA fallback 评测口径。 |
+| 2026-11-09 | 记下 Claude Enterprise 将对话与 Cowork 合并。40% / 30% 是文章里的用量对比，不改 Fable 5 牌价。 |

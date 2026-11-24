@@ -28,8 +28,12 @@ sources:
     url: https://openai.com/index/openai-models-google-cloud/
     tier: 一手
     verified: 2026-10-22
+  - name: Google Cloud《Expanding Claude availability and deployment choice on Google Cloud》
+    url: https://cloud.google.com/blog/products/ai-machine-learning/expanding-claude-availability-on-google-cloud
+    tier: 一手
+    verified: 2026-11-09
 created: 2026-08-31
-updated: 2026-10-22
+updated: 2026-11-09
 status: 已消化
 ---
 
@@ -220,6 +224,7 @@ Bedrock 强调身份、Policy、Guardrails、Observability 与合规；百炼强
 5. **建设可审计的回退机制。** 每次请求记录期望模型、实际模型、实际 Provider、回退原因、成本变化和质量风险，才能把多供应商能力转化为可售 SLA。
 6. **国内云竞品重点看全链路捆绑。** 方舟和百炼都从模型 API 向 Agent、知识库和定制部署延伸；TokenHub 应决定哪些能力自建、哪些通过标准协议集成，避免在非核心层全面铺开。
 7. **多一个云渠道，不等于多一套牌价。** 2026-10-21 OpenAI 宣布前沿模型和 Codex 的智能体流程将进入 Google Cloud Model Garden，交易走 Marketplace，已有 GCP 承诺额度可以抵扣。正式上线写的是未来数周。公告没有写模型清单和价格。Microsoft 仍是 OpenAI 的主要云合作方。Google Cloud 自己的博客另列了 GPT-6 Astra、GPT-6.1 Sol、GPT-6 Luna，那是 Google 的页面，不覆盖本库已核实的 GPT-5.6 直连牌价。
+8. **同一云上的 Claude，要先问谁是数据处理者。** 2026-10-23 Google Cloud 宣布 Anthropic 托管的部署选项一般可用，与原有的 Google 托管选项并列。博客写两边是同一批前沿模型、同一套价格、同一张 Google Cloud 账单，承诺额度都可以抵扣。差别是数据处理者和新平台功能何时可用：Anthropic 托管由 Anthropic 按自己的商业条款做数据处理者，Managed Agents（beta）、skills、代码执行当天可用；Google 托管由 Google Cloud 按现有客户协议做数据处理者，有 VPC Service Controls、客户管理密钥，以及美国、欧盟、亚太的数据驻留，新功能要等接进这套基础设施。博客点名当时可访问的模型包括 Claude Fable 5.1、Sonnet 5.5、Haiku 5.5、Opus 5.5。没有单独的单价表。Opus 5.5 Fast 的速度倍数和加价不在这篇博客里，没有准确数据。
 
 ## 原文与参考
 
@@ -228,4 +233,5 @@ Bedrock 强调身份、Policy、Guardrails、Observability 与合规；百炼强
 - [阿里云百炼官方文档](https://help.aliyun.com/zh/model-studio/)（阿里云，2026-08-31 核实）
 - [Amazon Bedrock](https://aws.amazon.com/bedrock/)（AWS，2026-08-31 核实）
 - [OpenRouter](https://openrouter.ai/)（OpenRouter，2026-08-31 核实）
+- [Expanding Claude availability and deployment choice on Google Cloud](https://cloud.google.com/blog/products/ai-machine-learning/expanding-claude-availability-on-google-cloud)（Google Cloud，2026-10-23 发布，2026-11-09 核实）
 - 关键术语对照：MaaS（Model as a Service，模型即服务）、API Aggregator（API 聚合商）、Inference Provider（推理供应商）、Fallback（故障回退）、Guardrails（安全护栏）、Knowledge Base（知识库）、SFT（有监督微调）、CPT（继续预训练）、DPO（直接偏好优化）、TPM（每分钟 token 数）。
